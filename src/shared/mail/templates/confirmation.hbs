@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{i18n 'mail.email_confirmation.subject' lang=lang}}</title>
+</head>
+<body>
+  <h2>{{i18n 'mail.greeting' name=name lang=lang}}</h2>
+  <p>{{i18n 'mail.email_confirmation.text' lang=lang}}</p>
+  <p>
+    <a href="{{url}}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+      {{i18n 'mail.email_confirmation.button' lang=lang}}
+    </a>
+  </p>
+  <p>{{i18n 'mail.email_confirmation.alternative_text' lang=lang}} <a href="{{url}}">{{url}}</a></p>
+  <p>{{i18n 'mail.email_confirmation.ignore_text' lang=lang}}</p>
+</body>
+</html>

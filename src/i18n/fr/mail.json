@@ -1,0 +1,17 @@
+{
+  "greeting": "Bonjour {name}!",
+  "password_reset": {
+    "subject": "Réinitialisation du mot de passe",
+    "text": "Vous avez demandé à réinitialiser votre mot de passe. Veuillez cliquer sur le bouton ci-dessous pour définir un nouveau mot de passe :",
+    "button": "Réinitialiser le mot de passe",
+    "alternative_text": "Si le bouton ne fonctionne pas, vous pouvez aussi cliquer sur ce lien :",
+    "ignore_text": "Si vous n'avez pas demandé cette réinitialisation de mot de passe, vous pouvez ignorer cet email en toute sécurité."
+  },
+  "email_confirmation": {
+    "subject": "Confirmation de votre email",
+    "text": "Veuillez cliquer sur le bouton ci-dessous pour confirmer votre adresse email :",
+    "button": "Confirmer l'email",
+    "alternative_text": "Si le bouton ne fonctionne pas, vous pouvez aussi cliquer sur ce lien :",
+    "ignore_text": "Si vous n'avez pas demandé cet email, vous pouvez l'ignorer en toute sécurité."
+  }
+}
