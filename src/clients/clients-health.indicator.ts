@@ -22,11 +22,6 @@ export class ClientsHealthIndicator {
           'SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = (SELECT DATABASE() AS databaseName) AND table_name = "clients";',
         );
       }
-    } else {
-      //sqlite
-      clientTableCount = await this.databaseService.get(
-        'SELECT count(*) as count FROM sqlite_master WHERE type="table" AND name="users"',
-      );
     }
     const indicator = this.healthIndicatorService.check('clients');
     if (clientTableCount?.count !== 1) {

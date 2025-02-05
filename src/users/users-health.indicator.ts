@@ -22,11 +22,6 @@ export class UsersHealthIndicator {
           'SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = (SELECT DATABASE() AS databaseName) AND table_name = "users";',
         );
       }
-    } else {
-      //sqlite
-      userTableCount = await this.databaseService.get(
-        'SELECT COUNT(*) as count FROM sqlite_master WHERE type="table" AND name="users"',
-      );
     }
     const adminUserCount = await this.databaseService.get(
       'SELECT COUNT(*) as count FROM users WHERE username = "admin"',

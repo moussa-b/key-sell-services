@@ -29,22 +29,11 @@ export class KnexService {
         directory: seedsDirectory,
       },
     };
-    const databaseurl = this.configService.get<string>('DATABASE_URL', '');
-    if (databaseurl.length > 0) {
-      this.knexConfig = {
-        ...baseConfig,
-        client: 'mysql2',
-        connection: databaseurl,
-      };
-    } else {
-      const filename = 'agency_db.sqlite';
-      this.knexConfig = {
-        ...baseConfig,
-        client: 'sqlite3',
-        connection: { filename },
-        useNullAsDefault: true,
-      };
-    }
+    this.knexConfig = {
+      ...baseConfig,
+      client: 'mysql2',
+      connection: this.configService.get<string>('DATABASE_URL'),
+    };
     this.knex = Knex(this.knexConfig);
   }
 
@@ -64,17 +53,6 @@ export class KnexService {
         this.logger.log(
           `Running knexfile.js with process.env.DATABASE_URL = ${this.obfuscateDatabaseString(connection)}`,
         );
-      } else {
-        const filename = (connection as Knex.Knex.Sqlite3ConnectionConfig)
-          .filename;
-        if (filename?.length > 0) {
-          this.logger.log(
-            `Running knexfile.js with process.env.DATABASE_FILE = ${filename}`,
-          );
-        } else {
-          this.logger.error('Knex configuration not provided');
-          return false;
-        }
       }
       this.logger.log('Running migrations...');
       await this.knex.migrate.latest({ loadExtensions: ['.js'] }); // Run latest migrations

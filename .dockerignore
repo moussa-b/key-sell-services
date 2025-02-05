@@ -3,7 +3,6 @@ Dockerfile
 node_modules
 npm-debug.log
 dist
-agency_db.sqlite
 .env.development.local
 .env.test.local
 .env.production.local

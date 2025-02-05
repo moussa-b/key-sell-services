@@ -17,7 +17,7 @@ This project is a web application developed as a demonstration. Built with **Nes
 
 ## Technologies Used
 - **NestJS**: A modular backend framework built with TypeScript.
-- **MySQL / MariaDB**: Relational database for data storage. Fallback automatically to Sqlite if no database provided.
+- **MySQL**: Relational database for data storage.
 - **Passport.js**: Authentication strategies management.
 - **Swagger**: Interactive documentation for REST APIs.
 
@@ -47,7 +47,7 @@ JWT_SECRET=jwtsecret123
 ADMIN_USER_PASSWORD=admin123
 
 # Optional database connexion
-# DATABASE_URL=mysql://agencyservices:agencyservices@localhost:3306/agency_db
+# DATABASE_URL=mysql://agencyservices:agencyservices@localhost:3306/keysell
 
 # Optional email configuration for sending emails
 EMAIL_USER=admin@example.com
@@ -81,7 +81,7 @@ ADMIN_USER_PASSWORD=admin123
 # It should not be committed to version control.
 
 # Database connection details
-DATABASE_URL=mysql://agencyservices:agencyservices@localhost:3306/agency_db
+DATABASE_URL=mysql://agencyservices:agencyservices@localhost:3306/keysell
 
 # JWT secret key used for authentication
 JWT_SECRET=jwtsecret123
@@ -111,7 +111,7 @@ All variables not marqued as **required** are optional.
 
 - `JWT_SECRET`: This is a **required** variable that holds a secret key used for generating JSON Web Tokens (JWT) for authentication purposes. Keep this value secure as it allows users to be authenticated within the application.
 - `ADMIN_USER_PASSWORD`: This is a **required** variable that defines the initial password for the admin user. It's recommended to change this password after the initial setup for security reasons.
-- `DATABASE_URL`: This variable stores the connection string for the database. It uses the mysql protocol and specifies the username (agencyservices), password (agencyservices), hostname (localhost), port (3306), and database name (agency_db). If this variable is omitted Sqlite will be used for the database.
+- `DATABASE_URL`: This variable stores the connection string for the database. It uses the mysql protocol and specifies the username (agencyservices), password (agencyservices), hostname (localhost), port (3306), and database name (keysell).
 - `EMAIL_USER`: This variable specifies the email address used to send emails from the application.
 - `EMAIL_PASSWORD`: This variable stores the password for the email address specified in `EMAIL_USER`.
 - `EMAIL_SMTP_HOST`: This variable defines the hostname of the SMTP server used for sending emails.
@@ -169,24 +169,11 @@ To run test coverage, run the following command:
 npm run test:cov
 ```
 
-### Run with Docker
+### Run the application with Docker and a MySQL Database
 
 **Important Note:**
 
 Be sure that proper `.env` file is present before building the Docker image.
-
-#### 1. Running the application with an SQLite Database
-
-Build the Docker image by running the following command from the project's root directory:
-```bash
-docker build --no-cache -t key-sell-services .
-```
-Start the newly built Docker image using the following command:
-```bash
-docker run -p3000:3000 --env-file .env -d --name container-key-sell-services key-sell-services:latest
-```
-
-#### 2. Running the application with an MySQL Database
 
 To launch the services, including a MySQL container connected to the NestJS application, run the following command:
 ```bash

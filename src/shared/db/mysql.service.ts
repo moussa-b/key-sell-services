@@ -112,10 +112,10 @@ export class MysqlService
     }
     try {
       const connection = await this.pool.getConnection();
-      this.logger.log('MariaDB Database connected successfully');
+      this.logger.log('MySQL Database connected successfully');
       connection.release();
     } catch (error) {
-      this.logger.error('Error connecting to MariaDB:', error.message);
+      this.logger.error('Error connecting to MySQL:', error.message);
       throw error;
     }
   }
@@ -123,7 +123,7 @@ export class MysqlService
   // Lifecycle hook to clean up the pool on module destruction
   async onModuleDestroy() {
     await this.pool.end();
-    this.logger.log('MariaDB Database connection closed');
+    this.logger.log('MySQL Database connection closed');
   }
 
   // Generic query method

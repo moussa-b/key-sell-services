@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: agency_db
+      MYSQL_DATABASE: keysell
       MYSQL_USER: agencyservices
       MYSQL_PASSWORD: agencyservices
     ports:
@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: container-key-sell-services
     environment:
-      DATABASE_URL: mysql://agencyservices:agencyservices@mysql:3306/agency_db
+      DATABASE_URL: mysql://agencyservices:agencyservices@mysql:3306/keysell
     ports:
       - '3000:3000'
     depends_on:

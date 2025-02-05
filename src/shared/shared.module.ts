@@ -1,6 +1,5 @@
 import { Global, Module } from '@nestjs/common';
 import { MailService } from './mail/mail.service';
-import { SqliteService } from './db/sqlite.service';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { DbHealthIndicator } from './db/db-health.indicator';
@@ -42,9 +41,7 @@ import { join } from 'path';
     MailHealthIndicator,
     {
       provide: DatabaseService,
-      useClass: process.env.DATABASE_URL?.includes('mysql')
-        ? MysqlService
-        : SqliteService,
+      useClass: MysqlService,
     },
     HealthIndicatorService,
     KnexService,
