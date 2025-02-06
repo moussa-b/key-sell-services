@@ -8,7 +8,7 @@ import {
 import { Sex } from '../../shared/models/user-sex.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateClientDto {
+export class CreateSellerDto {
   @IsString()
   @IsNotEmpty()
   firstName: string;

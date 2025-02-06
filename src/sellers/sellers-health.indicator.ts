@@ -7,7 +7,7 @@ import { DatabaseService } from '../shared/db/database-service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class ClientsHealthIndicator {
+export class SellersHealthIndicator {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigService,
@@ -15,22 +15,22 @@ export class ClientsHealthIndicator {
   ) {}
 
   async isHealthy(): Promise<HealthIndicatorResult> {
-    let clientTableCount = { count: 0 };
+    let sellerTableCount = { count: 0 };
     if (this.configService.get<string>('DATABASE_URL')?.length > 0) {
       if (this.configService.get<string>('DATABASE_URL').includes('mysql')) {
-        clientTableCount = await this.databaseService.get(
-          'SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = (SELECT DATABASE() AS databaseName) AND table_name = "clients";',
+        sellerTableCount = await this.databaseService.get(
+          'SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = (SELECT DATABASE() AS databaseName) AND table_name = "sellers";',
         );
       }
     }
-    const indicator = this.healthIndicatorService.check('clients');
-    if (clientTableCount?.count !== 1) {
+    const indicator = this.healthIndicatorService.check('sellers');
+    if (sellerTableCount?.count !== 1) {
       return indicator.down({
-        isClientTablePresent: false,
+        isSellerTablePresent: false,
       });
     }
     return indicator.up({
-      isClientTablePresent: true,
+      isSellerTablePresent: true,
     });
   }
 }

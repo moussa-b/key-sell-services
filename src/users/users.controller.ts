@@ -16,13 +16,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UpdateClientDto } from '../clients/dto/update-client.dto';
+import { UpdateSellerDto } from '../sellers/dto/update-seller.dto';
 import { UserRole } from './entities/user-role.enum';
 import { User } from './entities/user.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -75,11 +76,11 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   update(
     @Param('id') id: string,
-    @Body() updateClientDto: UpdateClientDto,
+    @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: ConnectedUser,
   ): Promise<User> {
-    updateClientDto.updatedBy = user.id;
-    return this.usersService.update(+id, updateClientDto);
+    updateUserDto.updatedBy = user.id;
+    return this.usersService.update(+id, updateUserDto);
   }
 
   @ApiOperation({ summary: 'Delete a user by ID' })

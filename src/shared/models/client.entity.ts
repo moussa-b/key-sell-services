@@ -1,4 +1,4 @@
-import { Sex } from '../../shared/models/user-sex.enum';
+import { Sex } from './user-sex.enum';
 
 export class Client {
   id: number;
@@ -14,4 +14,5 @@ export class Client {
   createdAt: Date;
   updatedBy?: number;
   updatedAt?: Date;
+  userId?: number;
 }

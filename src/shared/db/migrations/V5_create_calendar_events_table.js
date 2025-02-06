@@ -2,8 +2,8 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function (knex) {
-  return knex.schema.createTable('calendar_events', function (table) {
+exports.up = async function (knex) {
+  await knex.schema.createTable('calendar_events', function (table) {
     table.increments('id').primary();
     table.string('uuid', 40).notNullable().unique();
     table.string('title', 512).notNullable();
@@ -44,8 +44,15 @@ exports.up = function (knex) {
       .inTable('users')
       .onDelete('SET NULL');
   });
+
+  return knex.schema.raw(`
+    CREATE TRIGGER update_calendar_events_updated_at BEFORE UPDATE ON calendar_events
+    FOR EACH ROW
+    SET NEW.updated_at = CURRENT_TIMESTAMP;
+  `);
 };
 
-exports.down = function (knex) {
+exports.down = async function (knex) {
+  await knex.raw(`DROP TRIGGER IF EXISTS update_calendar_events_updated_at;`);
   return knex.schema.dropTable('calendar_events');
 };

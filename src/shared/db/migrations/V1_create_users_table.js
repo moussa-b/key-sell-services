@@ -5,7 +5,7 @@
 exports.up = async function (knex) {
   const exists = await knex.schema.hasTable('users');
   if (!exists) {
-    return knex.schema.createTable('users', (table) => {
+    await knex.schema.createTable('users', (table) => {
       table.increments('id').primary();
       table.text('uuid'); // uuid TEXT
       table.string('username').unique().notNullable(); // username TEXT UNIQUE NOT NULL
@@ -14,6 +14,7 @@ exports.up = async function (knex) {
       table.string('first_name').notNullable(); // first_name TEXT NOT NULL
       table.string('last_name').notNullable(); // last_name TEXT NOT NULL
       table.string('sex'); // sex TEXT
+      table.string('preferred_language'); // preferred_language TEXT
       table.string('role').notNullable().defaultTo('user'); // role TEXT NOT NULL DEFAULT 'user'
       table.boolean('is_active').defaultTo(false); // is_active BOOLEAN DEFAULT 0
       table.text('activation_token'); // activation_token TEXT
@@ -40,6 +41,12 @@ exports.up = async function (knex) {
         .inTable('users')
         .onDelete('SET NULL');
     });
+
+    return knex.schema.raw(`
+    CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW
+    SET NEW.updated_at = CURRENT_TIMESTAMP;
+  `);
   }
 };
 
@@ -47,6 +54,7 @@ exports.up = async function (knex) {
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.down = function (knex) {
+exports.down = async function (knex) {
+  await knex.raw(`DROP TRIGGER IF EXISTS update_users_updated_at;`);
   return knex.schema.dropTableIfExists('users');
 };
