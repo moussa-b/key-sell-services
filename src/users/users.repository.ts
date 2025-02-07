@@ -6,6 +6,7 @@ import { UserRole } from './entities/user-role.enum';
 import { UpdateUserSecurityDto } from './dto/update-user-security.dto';
 import { DatabaseService } from '../shared/db/database-service';
 import { DateUtils } from '../utils/date-utils';
+import { UserAccess } from './entities/user-access.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -26,7 +27,7 @@ export class UsersRepository {
     user.lastName = row['last_name'];
     user.sex = row['sex'];
     user.preferredLanguage = row['preferred_language'];
-    user.role = row['role'];
+    user.role = row['role'] || UserRole.USER;
     user.isActive = row['is_active'];
     user.activationToken = row['activation_token'];
     user.resetPasswordToken = row['reset_password_token'];
@@ -39,6 +40,12 @@ export class UsersRepository {
       row['updated_at'] instanceof Date
         ? row['updated_at']
         : DateUtils.createDateFromDatabaseDate(row['updated_at']);
+    if (row['userAccess']) {
+      user.userAccess = new UserAccess({
+        role: user.role,
+        ...row['userAccess'],
+      });
+    }
     return user;
   }
 
@@ -144,11 +151,19 @@ export class UsersRepository {
     });
   }
 
-  async findByEmailOrUsername(email: string): Promise<User> {
-    return this.databaseService.get<User>(
-      'SELECT * FROM users WHERE email = ? OR username = ?',
-      [email, email],
-      (row: any) => this.rowMapper(row, true),
+  async findByEmailOrUsername(
+    email: string,
+    includeUserAccess = false,
+  ): Promise<User> {
+    let query;
+    if (includeUserAccess) {
+      query =
+        'SELECT u.*, JSON_OBJECTAGG(access, active = 1) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE email = ? OR username = ? GROUP BY u.id';
+    } else {
+      query = 'SELECT * FROM users WHERE email = ? OR username = ?';
+    }
+    return this.databaseService.get<User>(query, [email, email], (row: any) =>
+      this.rowMapper(row, true),
     );
   }
 

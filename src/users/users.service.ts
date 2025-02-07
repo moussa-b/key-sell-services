@@ -78,8 +78,11 @@ export class UsersService {
     return this.usersRepository.remove(id);
   }
 
-  async findByEmailOrUsername(email: string): Promise<User> {
-    return this.usersRepository.findByEmailOrUsername(email);
+  async findByEmailOrUsername(
+    email: string,
+    includeUserAccess = false,
+  ): Promise<User> {
+    return this.usersRepository.findByEmailOrUsername(email, includeUserAccess);
   }
 
   async findById(id: number): Promise<User> {

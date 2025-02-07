@@ -23,19 +23,24 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findByEmailOrUsername(email);
+    const user = await this.usersService.findByEmailOrUsername(email, true);
     if (user && (await bcrypt.compare(password, user.password))) {
       if (!user.isActive) {
         throw new UnauthorizedException('Please verify your email first');
       }
-      const { password, ...result } = user;
-      return result;
+      delete user.password;
+      return user;
     }
     return null;
   }
 
   login(user: User): AccessToken {
-    const payload = { username: user.username, sub: user.id, role: user.role };
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role,
+      userAccess: user.userAccess,
+    };
     return {
       accessToken: this.jwtService.sign(payload),
     };

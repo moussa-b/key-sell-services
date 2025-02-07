@@ -1,6 +1,7 @@
 import { Sex } from '../../shared/models/user-sex.enum';
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { UserRole } from './user-role.enum';
+import { UserAccess } from './user-access.entity';
 
 export class User {
   id: number;
@@ -26,4 +27,5 @@ export class User {
   createdAt: Date;
   updatedBy?: number;
   updatedAt?: Date;
+  userAccess?: UserAccess;
 }
