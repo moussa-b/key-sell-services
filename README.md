@@ -10,7 +10,7 @@ This project is the backend for a real estate agency web application. It is Buil
 - **Account Recovery**: Password reset via email or secure token.
 - **Password Change**: Updating user credentials.
 
-### Generic Entity Management (Example: Clients, Calendar Events):
+### Entity Management (Example: Buyers, Sellers, Calendar Events):
 - **Full CRUD**: Create, Read, Update, and Delete operations.
 - **Data Validation**: Ensuring data integrity and consistency through strict schemas.
 - **Pagination and Filters**: Efficient handling of large datasets - Work in progress.
