@@ -1,6 +1,6 @@
 # Demo Project - WebApp with NestJS
 
-This project is a web application developed as a demonstration. Built with **NestJS**, it showcases my backend development skills with a focus on API design and management.
+This project is the backend for a real estate agency web application. It is Built with **NestJS**.
 
 ## Main Features
 
