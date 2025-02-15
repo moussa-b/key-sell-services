@@ -11,6 +11,7 @@ export class UserAccess {
   canEditBuyers = false;
   canShowSellers = false;
   canEditSellers = false;
+  canSendEmail = false;
 
   constructor(props: { [key: string]: any }) {
     // first give accesses with role
@@ -26,6 +27,7 @@ export class UserAccess {
           this.canEditBuyers = true;
           this.canShowSellers = true;
           this.canEditSellers = true;
+          this.canSendEmail = true;
           break;
         case UserRole.ADMIN:
           this.canShowBuyers = true;
@@ -36,6 +38,7 @@ export class UserAccess {
           this.canEditUsers = true;
           this.canShowUsersAccess = true;
           this.canEditUsersAccess = true;
+          this.canSendEmail = true;
           break;
       }
     }

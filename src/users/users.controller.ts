@@ -9,14 +9,12 @@ import {
   Patch,
   Post,
   UseGuards,
-  Headers,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UpdateSellerDto } from '../sellers/dto/update-seller.dto';
 import { UserRole } from './entities/user-role.enum';
 import { User } from './entities/user.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
@@ -24,6 +22,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SendEmailDto } from '../shared/dto/send-email.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -56,11 +55,11 @@ export class UsersController {
   @ApiOperation({ summary: 'Retrieve a user by ID' })
   @ApiResponse({ status: 200, description: 'The user data.', type: User })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<User> {
-    const client = await this.usersService.findOne(+id);
+  @Get(':userId')
+  async findOne(@Param('userId') userId: string): Promise<User> {
+    const client = await this.usersService.findOne(+userId);
     if (!client) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`);
     }
     return client;
   }
@@ -72,15 +71,15 @@ export class UsersController {
     type: User,
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  @Patch(':id')
+  @Patch(':userId')
   @Roles(UserRole.ADMIN)
   update(
-    @Param('id') id: string,
+    @Param('userId') userId: string,
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: ConnectedUser,
   ): Promise<User> {
     updateUserDto.updatedBy = user.id;
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(+userId, updateUserDto);
   }
 
   @ApiOperation({ summary: 'Delete a user by ID' })
@@ -90,16 +89,41 @@ export class UsersController {
     type: ResponseStatus,
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  @Delete(':id')
+  @Delete(':userId')
   @Roles(UserRole.ADMIN)
-  async remove(@Param('id') id: string): Promise<ResponseStatus> {
-    if (+id === 1) {
-      throw new BadRequestException(`User with ID ${id} can not be deleted`);
+  async remove(@Param('userId') userId: string): Promise<ResponseStatus> {
+    if (+userId === 1) {
+      throw new BadRequestException(
+        `User with ID ${userId} can not be deleted`,
+      );
     }
-    const client = await this.usersService.findOne(+id);
+    const client = await this.usersService.findOne(+userId);
     if (!client) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`);
     }
-    return { status: await this.usersService.remove(+id) };
+    return { status: await this.usersService.remove(+userId) };
+  }
+
+  @ApiOperation({ summary: 'Send email to a user' })
+  @ApiResponse({
+    status: 200,
+    description: 'The email has been successfully sent to the user.',
+    type: ResponseStatus,
+  })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @Post(':userId/email/sent')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  async sendEmail(
+    @Param('userId') userId: string,
+    @Body() sendEmailDto: SendEmailDto,
+    @CurrentUser() connectedUser: ConnectedUser,
+  ): Promise<ResponseStatus> {
+    sendEmailDto.sentByUserId = connectedUser.id;
+    const user = await this.usersService.findOne(+userId);
+    if (!user) {
+      throw new NotFoundException(`Buyer with ID ${userId} not found`);
+    }
+    sendEmailDto.userId = +userId;
+    return this.usersService.sendEmail(user.email, sendEmailDto);
   }
 }

@@ -58,7 +58,7 @@ export class BuyersRepository {
 
   async findAll(): Promise<Buyer[]> {
     return this.databaseService.all<Buyer>(
-      'SELECT * FROM buyers ORDER BY created_at DESC',
+      'SELECT * FROM buyers ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );

@@ -86,7 +86,7 @@ export class UsersRepository {
 
   async findAll(): Promise<User[]> {
     return this.databaseService.all<User>(
-      'SELECT * FROM users ORDER BY created_at DESC',
+      'SELECT * FROM users ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );
@@ -158,7 +158,7 @@ export class UsersRepository {
     let query;
     if (includeUserAccess) {
       query =
-        'SELECT u.*, JSON_OBJECTAGG(access, active = 1) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE email = ? OR username = ? GROUP BY u.id';
+        "SELECT u.*, JSON_OBJECTAGG(COALESCE(access, 'null_access'), active = 1) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE email = ? OR username = ? GROUP BY u.id";
     } else {
       query = 'SELECT * FROM users WHERE email = ? OR username = ?';
     }

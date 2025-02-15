@@ -11,6 +11,7 @@ import { HealthIndicatorService } from '@nestjs/terminus';
 import { KnexService } from './db/knex.service';
 import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n';
 import { join } from 'path';
+import { MailRepository } from './mail/mail.repository';
 
 @Global()
 @Module({
@@ -45,6 +46,7 @@ import { join } from 'path';
     },
     HealthIndicatorService,
     KnexService,
+    MailRepository,
   ],
   exports: [
     DatabaseService,

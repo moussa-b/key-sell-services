@@ -78,7 +78,7 @@ export class CalendarEventsRepository {
 
   async findAll(): Promise<CalendarEvent[]> {
     return this.databaseService.all<CalendarEvent>(
-      'SELECT * FROM calendar_events ORDER BY created_at DESC',
+      'SELECT * FROM calendar_events ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );

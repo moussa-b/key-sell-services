@@ -21,6 +21,7 @@ import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
+import { SendEmailDto } from '../shared/dto/send-email.dto';
 
 @ApiTags('Sellers')
 @Controller('sellers')
@@ -65,11 +66,11 @@ export class SellersController {
     status: 404,
     description: 'Seller not found.',
   })
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Seller> {
-    const seller = await this.sellersService.findOne(+id);
+  @Get(':sellerId')
+  async findOne(@Param('sellerId') sellerId: string): Promise<Seller> {
+    const seller = await this.sellersService.findOne(+sellerId);
     if (!seller) {
-      throw new NotFoundException(`Seller with ID ${id} not found`);
+      throw new NotFoundException(`Seller with ID ${sellerId} not found`);
     }
     return seller;
   }
@@ -81,19 +82,19 @@ export class SellersController {
     type: Seller,
   })
   @ApiResponse({ status: 404, description: 'Seller not found.' })
-  @Patch(':id')
+  @Patch(':sellerId')
   @Roles(UserRole.ADMIN)
   async update(
-    @Param('id') id: string,
+    @Param('sellerId') sellerId: string,
     @Body() updateSellerDto: UpdateSellerDto,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Seller> {
     updateSellerDto.updatedBy = user.id;
-    const seller = await this.sellersService.findOne(+id);
+    const seller = await this.sellersService.findOne(+sellerId);
     if (!seller) {
-      throw new NotFoundException(`Seller with ID ${id} not found`);
+      throw new NotFoundException(`Seller with ID ${sellerId} not found`);
     }
-    return this.sellersService.update(+id, updateSellerDto);
+    return this.sellersService.update(+sellerId, updateSellerDto);
   }
 
   @ApiOperation({ summary: 'Delete a seller by ID' })
@@ -103,13 +104,36 @@ export class SellersController {
     type: ResponseStatus,
   })
   @ApiResponse({ status: 404, description: 'Seller not found.' })
-  @Delete(':id')
+  @Delete(':sellerId')
   @Roles(UserRole.ADMIN)
-  async remove(@Param('id') id: string): Promise<ResponseStatus> {
-    const seller = await this.sellersService.findOne(+id);
+  async remove(@Param('sellerId') sellerId: string): Promise<ResponseStatus> {
+    const seller = await this.sellersService.findOne(+sellerId);
     if (!seller) {
-      throw new NotFoundException(`Seller with ID ${id} not found`);
+      throw new NotFoundException(`Seller with ID ${sellerId} not found`);
     }
-    return { status: await this.sellersService.remove(+id) };
+    return { status: await this.sellersService.remove(+sellerId) };
+  }
+
+  @ApiOperation({ summary: 'Send email to a seller' })
+  @ApiResponse({
+    status: 200,
+    description: 'The email has been successfully sent to the seller.',
+    type: ResponseStatus,
+  })
+  @ApiResponse({ status: 404, description: 'Seller not found.' })
+  @Post(':sellerId/email/sent')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  async sendEmail(
+    @Param('sellerId') sellerId: string,
+    @Body() sendEmailDto: SendEmailDto,
+    @CurrentUser() user: ConnectedUser,
+  ): Promise<ResponseStatus> {
+    sendEmailDto.sentByUserId = user.id;
+    const seller = await this.sellersService.findOne(+sellerId);
+    if (!seller) {
+      throw new NotFoundException(`Seller with ID ${sellerId} not found`);
+    }
+    sendEmailDto.sellerId = +sellerId;
+    return this.sellersService.sendEmail(seller.email, sendEmailDto);
   }
 }

@@ -5,6 +5,8 @@ import * as hbs from 'nodemailer-express-handlebars'; //does not use latest vers
 import * as path from 'path';
 import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
+import { MailRepository } from './mail.repository';
+import { MailAudit } from './entities/mail-audit.entity';
 
 @Injectable()
 export class MailService {
@@ -14,6 +16,7 @@ export class MailService {
   constructor(
     private config: ConfigService,
     private readonly i18nService: I18nService,
+    private readonly mailRepository: MailRepository,
   ) {
     if (
       this.config.get<string>('EMAIL_SMTP_HOST')?.length > 0 &&
@@ -71,15 +74,39 @@ export class MailService {
       html?: string;
       context?: any;
     },
+    mailAudit?: MailAudit,
   ) {
     if (!this.transporter) {
       return false;
     }
-    return await this.transporter.sendMail({
-      to: to,
-      subject: subject,
-      ...configuration,
-    });
+    return this.transporter.sendMail(
+      {
+        to: to,
+        subject: subject,
+        ...configuration,
+      },
+      (
+        err: Error,
+        info: { messageId: string; envelope: { from: string; to: string[] } },
+      ) => {
+        if (err) {
+          this.logger.error(err.message);
+        }
+        const envelope: { from: string; to: string[] } = info.envelope;
+        if (info.envelope) {
+          this.mailRepository.create(
+            new MailAudit({
+              ...(mailAudit ? mailAudit : {}),
+              from: envelope.from,
+              to: envelope.to,
+              messageId: info.messageId,
+              subject: subject,
+              content: configuration.text || configuration.html,
+            }),
+          );
+        }
+      },
+    );
   }
 
   async verifyTransporter(): Promise<boolean> {
