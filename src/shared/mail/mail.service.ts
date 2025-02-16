@@ -7,6 +7,8 @@ import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
 import { MailRepository } from './mail.repository';
 import { MailAudit } from './entities/mail-audit.entity';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
 
 @Injectable()
 export class MailService {
@@ -39,6 +41,13 @@ export class MailService {
         },
       );
 
+      handlebars.registerHelper('i18n', (key: string, options: any) => {
+        return this.i18nService.translate(key, {
+          lang: options.hash.lang || 'fr',
+          args: options.hash,
+        });
+      });
+
       // Configure Handlebars plugin
       this.transporter.use(
         'compile',
@@ -48,15 +57,6 @@ export class MailService {
             layoutsDir: path.join(__dirname, './templates/'),
             defaultLayout: false,
             partialsDir: path.join(__dirname, './templates/'),
-            helpers: {
-              i18n: (key: string, options: any) => {
-                // Translation helper
-                return this.i18nService.translate(key, {
-                  lang: options.hash.lang || 'fr',
-                  args: options.hash,
-                });
-              },
-            },
           },
           viewPath: path.join(__dirname, './templates/'),
           extName: '.hbs',
@@ -94,6 +94,15 @@ export class MailService {
         }
         const envelope: { from: string; to: string[] } = info.envelope;
         if (info.envelope) {
+          let content: string;
+          if (configuration.template) {
+            content = this.compileTemplate(
+              configuration.template,
+              configuration.context,
+            );
+          } else {
+            content = configuration.text || configuration.html;
+          }
           this.mailRepository.create(
             new MailAudit({
               ...(mailAudit ? mailAudit : {}),
@@ -101,12 +110,24 @@ export class MailService {
               to: envelope.to,
               messageId: info.messageId,
               subject: subject,
-              content: configuration.text || configuration.html,
+              content: content,
             }),
           );
         }
       },
     );
+  }
+
+  compileTemplate(templateName: string, context: any): string | undefined {
+    const filePath = path.join(__dirname, 'templates', `${templateName}.hbs`);
+    try {
+      const source = fs.readFileSync(filePath, 'utf8');
+      const template = handlebars.compile(source);
+      return template(context);
+    } catch (e) {
+      this.logger.error(e.message);
+    }
+    return undefined;
   }
 
   async verifyTransporter(): Promise<boolean> {

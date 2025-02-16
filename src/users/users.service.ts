@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { MailAudit } from '../shared/mail/entities/mail-audit.entity';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +25,7 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
+    private readonly i18nService: I18nService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -48,10 +50,15 @@ export class UsersService {
     });
 
     const url = `${this.configService.get<string>('FRONT_END_URL')}/activate?token=${activationToken}&username=${createUserDto.username || createUserDto.email}`;
-
+    const subject = this.i18nService.translate(
+      'mail.email_confirmation.greeting',
+      {
+        lang: user.preferredLanguage || 'fr',
+      },
+    );
     this.mailService.sendEmail(
       user.email,
-      'Welcome! Confirm your Email',
+      subject,
       {
         template: './confirmation',
         context: { name: user.firstName, url, lang: user.preferredLanguage },
@@ -149,7 +156,10 @@ export class UsersService {
     expires.setHours(expires.getHours() + 24);
     await this.setResetPasswordToken(user.id, resetPasswordToken, expires);
     const url = `${this.configService.get<string>('FRONT_END_URL')}/reset-password?token=${resetPasswordToken}&username=${user.username || user.email}`;
-    this.mailService.sendEmail(user.email, 'Password Reset Request', {
+    const subject = this.i18nService.translate('mail.password_reset.subject', {
+      lang: user.preferredLanguage || 'fr',
+    });
+    this.mailService.sendEmail(user.email, subject, {
       template: './reset-password',
       context: {
         name: user.firstName,

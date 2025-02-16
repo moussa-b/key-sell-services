@@ -8,6 +8,7 @@
     "ignore_text": "Si vous n'avez pas demandé cette réinitialisation de mot de passe, vous pouvez ignorer cet email en toute sécurité."
   },
   "email_confirmation": {
+    "greeting": "Bienvenue ! Confirmez votre email",
     "subject": "Confirmation de votre email",
     "text": "Veuillez cliquer sur le bouton ci-dessous pour confirmer votre adresse email :",
     "button": "Confirmer l'email",
