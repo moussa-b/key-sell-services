@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 import { Sex } from '../../shared/models/user-sex.enum';
 import { ApiProperty } from '@nestjs/swagger';
+import { Address } from '../../shared/models/address.entity';
 
 export class CreateSellerDto {
   @IsString()
@@ -29,9 +30,8 @@ export class CreateSellerDto {
   @ApiProperty({ enum: ['M', 'F'] })
   sex: Sex;
 
-  @IsString()
   @IsOptional()
-  address?: string;
+  address?: Address;
 
   @IsString()
   @IsOptional()

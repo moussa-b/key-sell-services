@@ -5,10 +5,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { DatabaseService } from '../shared/db/database-service';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { DateUtils } from '../utils/date-utils';
+import { AddressesRepository } from '../shared/addresses.repository';
+import { Address } from '../shared/models/address.entity';
 
 @Injectable()
 export class BuyersRepository {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly addressesRepository: AddressesRepository,
+  ) {}
 
   rowMapper(row: any): Buyer {
     const buyer = new Buyer();
@@ -29,13 +34,31 @@ export class BuyersRepository {
       row['updated_at'] instanceof Date
         ? row['updated_at']
         : DateUtils.createDateFromDatabaseDate(row['updated_at']);
+    if (row['addressId']) {
+      buyer.address = new Address({
+        id: row['addressId'],
+        street: row['street'],
+        complement: row['complement'],
+        zipCode: row['zip_code'],
+        city: row['city'],
+        countryCode: row['country_code'],
+      });
+    }
     return buyer;
   }
 
   async create(createBuyerDto: CreateBuyerDto): Promise<Buyer> {
-    const insertQuery = `INSERT INTO buyers (uuid, first_name, last_name, email, phone, sex, preferred_language, address, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    let addressId = 0;
+    const address = new Address(createBuyerDto.address);
+    if (address?.isNotEmpty()) {
+      await this.addressesRepository.create(address);
+      addressId = address.id;
+    }
+    const insertBuyerQuery = `INSERT INTO buyers (uuid, first_name, last_name, email, phone, sex, preferred_language,
+                                                  address_id, created_by)
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
-      .run(insertQuery, [
+      .run(insertBuyerQuery, [
         uuidv4(),
         createBuyerDto.firstName,
         createBuyerDto.lastName,
@@ -43,11 +66,12 @@ export class BuyersRepository {
         createBuyerDto.phone,
         createBuyerDto.sex,
         createBuyerDto.preferredLanguage,
-        createBuyerDto.address,
+        addressId || undefined,
         createBuyerDto.createdBy,
       ])
       .then(() => {
-        const selectQuery = `SELECT * FROM buyers ORDER BY id DESC LIMIT 1`;
+        const selectQuery =
+          'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM buyers b LEFT JOIN addresses a ON b.address_id = a.id ORDER BY id DESC LIMIT 1';
         return this.databaseService.get<Buyer>(
           selectQuery,
           undefined,
@@ -58,7 +82,7 @@ export class BuyersRepository {
 
   async findAll(): Promise<Buyer[]> {
     return this.databaseService.all<Buyer>(
-      'SELECT * FROM buyers ORDER BY created_at ASC',
+      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM buyers b LEFT JOIN addresses a ON b.address_id = a.id ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );
@@ -66,24 +90,37 @@ export class BuyersRepository {
 
   async findOne(id: number): Promise<Buyer> {
     return this.databaseService.get<Buyer>(
-      'SELECT * FROM buyers WHERE id = ?',
+      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM buyers b LEFT JOIN addresses a ON b.address_id = a.id WHERE b.id = ?',
       [id],
       this.rowMapper,
     );
   }
 
   async update(id: number, updateBuyerDto: UpdateBuyerDto): Promise<Buyer> {
+    const address = new Address(updateBuyerDto.address);
+    let addressId = address.id;
+    if (address?.isNotEmpty()) {
+      if (addressId > 0) {
+        await this.addressesRepository.update(addressId, address);
+      } else {
+        await this.addressesRepository.create(address);
+        addressId = address.id;
+      }
+    } else if (addressId > 0) {
+      this.addressesRepository.remove(addressId);
+      addressId = 0;
+    }
     const updateQuery = `
-      UPDATE buyers
-      SET first_name = COALESCE(?, first_name),
-          last_name = COALESCE(?, last_name),
-          email = COALESCE(?, email),
-          phone = COALESCE(?, phone),
-          sex = COALESCE(?, sex),
-          preferred_language = COALESCE(?, preferred_language),
-          address = COALESCE(?, address),
-          updated_by = ?
-      WHERE id = ?`;
+        UPDATE buyers
+        SET first_name         = COALESCE(?, first_name),
+            last_name          = COALESCE(?, last_name),
+            email              = COALESCE(?, email),
+            phone              = COALESCE(?, phone),
+            sex                = COALESCE(?, sex),
+            preferred_language = COALESCE(?, preferred_language),
+            address_id         = ?,
+            updated_by         = ?
+        WHERE id = ?`;
     return this.databaseService
       .run(updateQuery, [
         updateBuyerDto.firstName || null,
@@ -92,17 +129,12 @@ export class BuyersRepository {
         updateBuyerDto.phone || null,
         updateBuyerDto.sex || null,
         updateBuyerDto.preferredLanguage || null,
-        updateBuyerDto.address || null,
+        addressId || null,
         updateBuyerDto.updatedBy,
         id,
       ])
       .then(() => {
-        const selectQuery = `SELECT * FROM buyers WHERE id =?`;
-        return this.databaseService.get<Buyer>(
-          selectQuery,
-          [id],
-          this.rowMapper,
-        );
+        return this.findOne(id);
       });
   }
 

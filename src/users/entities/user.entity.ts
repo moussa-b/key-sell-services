@@ -9,6 +9,7 @@ export class User {
   @ApiHideProperty()
   username: string;
   email: string;
+  @ApiHideProperty()
   password: string;
   firstName: string;
   lastName: string;

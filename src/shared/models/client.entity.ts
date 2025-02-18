@@ -1,4 +1,5 @@
 import { Sex } from './user-sex.enum';
+import { Address } from './address.entity';
 
 export class Client {
   id: number;
@@ -9,7 +10,7 @@ export class Client {
   phone: string;
   sex?: Sex;
   preferredLanguage?: string;
-  address?: string;
+  address?: Address;
   createdBy?: number;
   createdAt: Date;
   updatedBy?: number;

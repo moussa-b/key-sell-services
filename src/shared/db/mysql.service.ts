@@ -28,18 +28,24 @@ export class MysqlService
     }
   }
 
-  async run(query: string, params: any[] = []): Promise<void> {
+  async run(query: string, params: any[] = []): Promise<number> {
+    let connection: PoolConnection;
     try {
-      const connection = await this.pool.getConnection();
+      connection = await this.pool.getConnection();
       params?.forEach((param: any, index: number) => {
         if (param === undefined) {
           params[index] = null;
         }
       });
-      await connection.execute(query, params);
+      const [result]: any = await connection.execute(query, params);
       connection.release();
+      return result.insertId || 0;
     } catch (err) {
       throw err;
+    } finally {
+      if (connection) {
+        connection.release();
+      }
     }
   }
 

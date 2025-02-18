@@ -2,11 +2,13 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { Sex } from '../../shared/models/user-sex.enum';
 import { ApiProperty } from '@nestjs/swagger';
+import { Address } from '../../shared/models/address.entity';
 
 export class CreateBuyerDto {
   @IsString()
@@ -29,13 +31,20 @@ export class CreateBuyerDto {
   @ApiProperty({ enum: ['M', 'F'] })
   sex: Sex;
 
-  @IsString()
   @IsOptional()
-  address?: string;
+  address?: Address;
 
   @IsString()
   @IsOptional()
   preferredLanguage: string;
+
+  @IsOptional()
+  @IsNumber()
+  budget: number;
+
+  @IsString()
+  @IsOptional()
+  budgetCurrency: string;
 
   createdBy?: number;
 

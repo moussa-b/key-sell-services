@@ -5,10 +5,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { DatabaseService } from '../shared/db/database-service';
 import { UpdateSellerDto } from './dto/update-seller.dto';
 import { DateUtils } from '../utils/date-utils';
+import { AddressesRepository } from '../shared/addresses.repository';
+import { Address } from '../shared/models/address.entity';
 
 @Injectable()
 export class SellersRepository {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly addressesRepository: AddressesRepository,
+  ) {}
 
   rowMapper(row: any): Seller {
     const seller = new Seller();
@@ -29,13 +34,29 @@ export class SellersRepository {
       row['updated_at'] instanceof Date
         ? row['updated_at']
         : DateUtils.createDateFromDatabaseDate(row['updated_at']);
+    if (row['addressId']) {
+      seller.address = new Address({
+        id: row['addressId'],
+        street: row['street'],
+        complement: row['complement'],
+        zipCode: row['zip_code'],
+        city: row['city'],
+        countryCode: row['country_code'],
+      });
+    }
     return seller;
   }
 
   async create(createSellerDto: CreateSellerDto): Promise<Seller> {
-    const insertQuery = `INSERT INTO sellers (uuid, first_name, last_name, email, phone, sex, preferred_language, address, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    let addressId = 0;
+    const address = new Address(createSellerDto.address);
+    if (address?.isNotEmpty()) {
+      await this.addressesRepository.create(address);
+      addressId = address.id;
+    }
+    const insertSellerQuery = `INSERT INTO sellers (uuid, first_name, last_name, email, phone, sex, preferred_language, address_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
-      .run(insertQuery, [
+      .run(insertSellerQuery, [
         uuidv4(),
         createSellerDto.firstName,
         createSellerDto.lastName,
@@ -43,11 +64,11 @@ export class SellersRepository {
         createSellerDto.phone,
         createSellerDto.sex,
         createSellerDto.preferredLanguage,
-        createSellerDto.address,
+        addressId || null,
         createSellerDto.createdBy,
       ])
       .then(() => {
-        const selectQuery = `SELECT * FROM sellers ORDER BY id DESC LIMIT 1`;
+        const selectQuery = `SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM sellers s LEFT JOIN addresses a ON s.address_id = a.id ORDER BY id DESC LIMIT 1`;
         return this.databaseService.get<Seller>(
           selectQuery,
           undefined,
@@ -58,7 +79,7 @@ export class SellersRepository {
 
   async findAll(): Promise<Seller[]> {
     return this.databaseService.all<Seller>(
-      'SELECT * FROM sellers ORDER BY created_at ASC',
+      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM sellers s LEFT JOIN addresses a ON s.address_id = a.id ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );
@@ -66,13 +87,26 @@ export class SellersRepository {
 
   async findOne(id: number): Promise<Seller> {
     return this.databaseService.get<Seller>(
-      'SELECT * FROM sellers WHERE id = ?',
+      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM sellers s LEFT JOIN addresses a ON s.address_id = a.id WHERE s.id = ?',
       [id],
       this.rowMapper,
     );
   }
 
   async update(id: number, updateSellerDto: UpdateSellerDto): Promise<Seller> {
+    const address = new Address(updateSellerDto.address);
+    let addressId = address.id;
+    if (address?.isNotEmpty()) {
+      if (addressId > 0) {
+        await this.addressesRepository.update(addressId, address);
+      } else {
+        await this.addressesRepository.create(address);
+        addressId = address.id;
+      }
+    } else if (addressId > 0) {
+      this.addressesRepository.remove(addressId);
+      addressId = 0;
+    }
     const updateQuery = `
       UPDATE sellers
       SET first_name = COALESCE(?, first_name),
@@ -81,7 +115,7 @@ export class SellersRepository {
           phone = COALESCE(?, phone),
           sex = COALESCE(?, sex),
           preferred_language = COALESCE(?, preferred_language),
-          address = COALESCE(?, address),
+          address_id = ?,
           updated_by = ?
       WHERE id = ?`;
     return this.databaseService
@@ -92,7 +126,7 @@ export class SellersRepository {
         updateSellerDto.phone || null,
         updateSellerDto.sex || null,
         updateSellerDto.preferredLanguage || null,
-        updateSellerDto.address || null,
+        addressId || null,
         updateSellerDto.updatedBy,
         id,
       ])

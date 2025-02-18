@@ -12,6 +12,8 @@ import { KnexService } from './db/knex.service';
 import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n';
 import { join } from 'path';
 import { MailRepository } from './mail/mail.repository';
+import { AddressesRepository } from './addresses.repository';
+import { AddressesService } from './addresses.service';
 
 @Global()
 @Module({
@@ -47,12 +49,16 @@ import { MailRepository } from './mail/mail.repository';
     HealthIndicatorService,
     KnexService,
     MailRepository,
+    AddressesRepository,
+    AddressesService,
   ],
   exports: [
     DatabaseService,
     MailService,
     DbHealthIndicator,
     MailHealthIndicator,
+    AddressesRepository,
+    AddressesService,
   ],
 })
 export class SharedModule {}

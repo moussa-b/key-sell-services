@@ -14,7 +14,7 @@ exports.up = async function (knex) {
       table.string('phone'); // phone TEXT
       table.string('sex'); // sex TEXT
       table.string('preferred_language'); // preferred_language TEXT
-      table.text('address'); // address TEXT
+      table.integer('address_id').unsigned().nullable();
       table.integer('created_by').unsigned().nullable();
       table.datetime('created_at').defaultTo(knex.fn.now()); // created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       table.integer('updated_by').unsigned().nullable();
@@ -24,6 +24,8 @@ exports.up = async function (knex) {
       // Indexes and Foreign Keys
       table.index(['created_by'], 'fk_sellers_created_by');
       table.index(['updated_by'], 'fk_sellers_updated_by');
+      table.index(['user_id'], 'fk_sellers_user_id');
+      table.index(['address_id'], 'fk_sellers_address_id');
 
       table
         .foreign('created_by', 'fk_sellers_created_by')
@@ -41,6 +43,12 @@ exports.up = async function (knex) {
         .foreign('user_id', 'fk_sellers_user_id')
         .references('id')
         .inTable('users')
+        .onDelete('SET NULL');
+
+      table
+        .foreign('address_id', 'fk_sellers_address_id')
+        .references('id')
+        .inTable('addresses')
         .onDelete('SET NULL');
     });
 

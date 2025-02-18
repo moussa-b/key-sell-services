@@ -6,24 +6,28 @@ exports.up = async function (knex) {
   const exists = await knex.schema.hasTable('buyers');
   if (!exists) {
     await knex.schema.createTable('buyers', (table) => {
-      table.increments('id').primary(); // id INTEGER PRIMARY KEY AUTOINCREMENT
-      table.text('uuid'); // uuid TEXT
-      table.string('first_name').notNullable(); // first_name TEXT NOT NULL
-      table.string('last_name').notNullable(); // last_name TEXT NOT NULL
-      table.string('email').notNullable(); // email TEXT NOT NULL
-      table.string('phone'); // phone TEXT
-      table.string('sex'); // sex TEXT
-      table.string('preferred_language'); // preferred_language TEXT
-      table.text('address'); // address TEXT
+      table.increments('id').primary();
+      table.text('uuid');
+      table.string('first_name').notNullable();
+      table.string('last_name').notNullable();
+      table.string('email').notNullable();
+      table.string('phone');
+      table.string('sex');
+      table.string('preferred_language');
+      table.decimal('budget', 12, 2).unsigned().defaultTo(0).nullable();
+      table.string('budget_currency').nullable();
+      table.integer('address_id').unsigned().nullable();
       table.integer('created_by').unsigned().nullable();
-      table.datetime('created_at').defaultTo(knex.fn.now()); // created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      table.datetime('created_at').defaultTo(knex.fn.now());
       table.integer('updated_by').unsigned().nullable();
-      table.datetime('updated_at'); // updated_at DATETIME
+      table.datetime('updated_at');
       table.integer('user_id').unsigned().nullable();
 
       // Indexes and Foreign Keys
       table.index(['created_by'], 'fk_buyers_created_by');
       table.index(['updated_by'], 'fk_buyers_updated_by');
+      table.index(['user_id'], 'fk_buyers_user_id');
+      table.index(['address_id'], 'fk_buyers_address_id');
 
       table
         .foreign('created_by', 'fk_buyers_created_by')
@@ -41,6 +45,12 @@ exports.up = async function (knex) {
         .foreign('user_id', 'fk_buyers_user_id')
         .references('id')
         .inTable('users')
+        .onDelete('SET NULL');
+
+      table
+        .foreign('address_id', 'fk_buyers_address_id')
+        .references('id')
+        .inTable('addresses')
         .onDelete('SET NULL');
     });
 

@@ -7,12 +7,14 @@ import { SendEmailDto } from '../shared/dto/send-email.dto';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { MailService } from '../shared/mail/mail.service';
 import { MailAudit } from '../shared/mail/entities/mail-audit.entity';
+import { AddressesService } from '../shared/addresses.service';
 
 @Injectable()
 export class SellersService {
   constructor(
     private readonly sellerRepository: SellersRepository,
     private readonly mailService: MailService,
+    private readonly addressesService: AddressesService,
   ) {}
 
   async create(createSellerDto: CreateSellerDto): Promise<Seller> {
@@ -31,7 +33,10 @@ export class SellersService {
     return this.sellerRepository.update(id, updateSellerDto);
   }
 
-  async remove(id: number): Promise<boolean> {
+  async remove(id: number, addressId: number): Promise<boolean> {
+    if (addressId > 0) {
+      this.addressesService.remove(addressId);
+    }
     return this.sellerRepository.remove(id);
   }
 

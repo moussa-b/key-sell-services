@@ -111,7 +111,9 @@ export class SellersController {
     if (!seller) {
       throw new NotFoundException(`Seller with ID ${sellerId} not found`);
     }
-    return { status: await this.sellersService.remove(+sellerId) };
+    return {
+      status: await this.sellersService.remove(+sellerId, seller.address?.id),
+    };
   }
 
   @ApiOperation({ summary: 'Send email to a seller' })
