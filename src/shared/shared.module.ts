@@ -14,6 +14,8 @@ import { join } from 'path';
 import { MailRepository } from './mail/mail.repository';
 import { AddressesRepository } from './addresses.repository';
 import { AddressesService } from './addresses.service';
+import { CommonController } from './common.controller';
+import { CommonService } from './common.service';
 
 @Global()
 @Module({
@@ -51,6 +53,7 @@ import { AddressesService } from './addresses.service';
     MailRepository,
     AddressesRepository,
     AddressesService,
+    CommonService,
   ],
   exports: [
     DatabaseService,
@@ -60,5 +63,6 @@ import { AddressesService } from './addresses.service';
     AddressesRepository,
     AddressesService,
   ],
+  controllers: [CommonController],
 })
 export class SharedModule {}

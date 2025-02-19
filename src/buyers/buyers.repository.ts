@@ -25,7 +25,8 @@ export class BuyersRepository {
     buyer.phone = row['phone'];
     buyer.sex = row['sex'];
     buyer.preferredLanguage = row['preferred_language'];
-    buyer.address = row['address'];
+    buyer.budget = row['budget'];
+    buyer.budgetCurrency = row['budget_currency'];
     buyer.createdAt =
       row['created_at'] instanceof Date
         ? row['created_at']
@@ -55,8 +56,8 @@ export class BuyersRepository {
       addressId = address.id;
     }
     const insertBuyerQuery = `INSERT INTO buyers (uuid, first_name, last_name, email, phone, sex, preferred_language,
-                                                  address_id, created_by)
-                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                                                  budget, budget_currency, address_id, created_by)
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertBuyerQuery, [
         uuidv4(),
@@ -66,6 +67,8 @@ export class BuyersRepository {
         createBuyerDto.phone,
         createBuyerDto.sex,
         createBuyerDto.preferredLanguage,
+        createBuyerDto.budget,
+        createBuyerDto.budgetCurrency,
         addressId || undefined,
         createBuyerDto.createdBy,
       ])
@@ -118,6 +121,8 @@ export class BuyersRepository {
             phone              = COALESCE(?, phone),
             sex                = COALESCE(?, sex),
             preferred_language = COALESCE(?, preferred_language),
+            budget             = ?,
+            budget_currency    = ?,
             address_id         = ?,
             updated_by         = ?
         WHERE id = ?`;
@@ -129,6 +134,8 @@ export class BuyersRepository {
         updateBuyerDto.phone || null,
         updateBuyerDto.sex || null,
         updateBuyerDto.preferredLanguage || null,
+        updateBuyerDto.budget || null,
+        updateBuyerDto.budgetCurrency || null,
         addressId || null,
         updateBuyerDto.updatedBy,
         id,

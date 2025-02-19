@@ -1,0 +1,14 @@
+{
+  "supported_countries": [
+    {
+      "label": "Maroc",
+      "value": "MA"
+    }
+  ],
+  "supported_currencies": [
+    {
+      "label": "MAD",
+      "value": "MAD"
+    }
+  ]
+}
