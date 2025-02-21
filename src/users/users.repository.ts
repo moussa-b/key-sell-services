@@ -74,13 +74,8 @@ export class UsersRepository {
         userData.isActive,
         userData.createdBy,
       ])
-      .then(() => {
-        const selectQuery = `SELECT * FROM users ORDER BY id DESC LIMIT 1`;
-        return this.databaseService.get<User>(
-          selectQuery,
-          undefined,
-          this.rowMapper,
-        );
+      .then((userId: number) => {
+        return this.findOne(userId);
       });
   }
 
@@ -110,12 +105,12 @@ export class UsersRepository {
   ): Promise<User> {
     const updateQuery = `
       UPDATE users
-      SET email = COALESCE(?, email),
-          first_name = COALESCE(?, first_name),
-          last_name = COALESCE(?, last_name),
-          sex = COALESCE(?, sex),
-          preferred_language = COALESCE(?, preferred_language),
-          role = COALESCE(?, role),
+      SET email = ?,
+          first_name = ?,
+          last_name = ?,
+          sex = ?,
+          preferred_language = ?,
+          role = ?,
           updated_by = ?
       WHERE id = ?`;
     return this.databaseService

@@ -7,6 +7,7 @@ import { HealthModule } from './health/health.module';
 import { VersionModule } from './version/version.module';
 import { CalendarEventsModule } from './calendar-events/calendar-events.module';
 import { BuyersModule } from './buyers/buyers.module';
+import { RealEstatesModule } from './real-estates/real-estates.module';
 
 @Global()
 @Module({
@@ -19,6 +20,7 @@ import { BuyersModule } from './buyers/buyers.module';
     VersionModule,
     CalendarEventsModule,
     BuyersModule,
+    RealEstatesModule,
   ],
 })
 export class AppModule {}

@@ -5,6 +5,8 @@ export abstract class DatabaseService {
 
   abstract all<T>(query: string, params?: any[], rowMapper?: (row: any) => T);
 
+  abstract batchInsert(query: string, params: any[][]): Promise<number>;
+
   abstract transaction(
     queries: { query: string; params: any[] }[],
   ): Promise<void>;

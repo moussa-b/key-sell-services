@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { SellersModule } from '../sellers/sellers.module';
 import { CalendarEventsModule } from '../calendar-events/calendar-events.module';
 import { BuyersModule } from '../buyers/buyers.module';
+import { RealEstatesModule } from '../real-estates/real-estates.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { BuyersModule } from '../buyers/buyers.module';
     BuyersModule,
     SellersModule,
     CalendarEventsModule,
+    RealEstatesModule,
   ],
   controllers: [HealthController],
 })

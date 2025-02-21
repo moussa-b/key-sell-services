@@ -51,7 +51,7 @@ export class BuyersRepository {
   async create(createBuyerDto: CreateBuyerDto): Promise<Buyer> {
     let addressId = 0;
     const address = new Address(createBuyerDto.address);
-    if (address?.isNotEmpty()) {
+    if (address?.isNotEmpty() && address?.isValid()) {
       await this.addressesRepository.create(address);
       addressId = address.id;
     }
@@ -72,14 +72,8 @@ export class BuyersRepository {
         addressId || undefined,
         createBuyerDto.createdBy,
       ])
-      .then(() => {
-        const selectQuery =
-          'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM buyers b LEFT JOIN addresses a ON b.address_id = a.id ORDER BY id DESC LIMIT 1';
-        return this.databaseService.get<Buyer>(
-          selectQuery,
-          undefined,
-          this.rowMapper,
-        );
+      .then((buyerId: number) => {
+        return this.findOne(buyerId);
       });
   }
 
@@ -102,7 +96,7 @@ export class BuyersRepository {
   async update(id: number, updateBuyerDto: UpdateBuyerDto): Promise<Buyer> {
     const address = new Address(updateBuyerDto.address);
     let addressId = address.id;
-    if (address?.isNotEmpty()) {
+    if (address?.isNotEmpty() && address?.isValid()) {
       if (addressId > 0) {
         await this.addressesRepository.update(addressId, address);
       } else {
@@ -115,12 +109,12 @@ export class BuyersRepository {
     }
     const updateQuery = `
         UPDATE buyers
-        SET first_name         = COALESCE(?, first_name),
-            last_name          = COALESCE(?, last_name),
-            email              = COALESCE(?, email),
-            phone              = COALESCE(?, phone),
-            sex                = COALESCE(?, sex),
-            preferred_language = COALESCE(?, preferred_language),
+        SET first_name         = ?,
+            last_name          = ?,
+            email              = ?,
+            phone              = ?,
+            sex                = ?,
+            preferred_language = ?,
             budget             = ?,
             budget_currency    = ?,
             address_id         = ?,

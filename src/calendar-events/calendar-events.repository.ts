@@ -66,13 +66,8 @@ export class CalendarEventsRepository {
         null,
         createCalendarEventDto.createdBy,
       ])
-      .then(() => {
-        const selectQuery = `SELECT * FROM calendar_events ORDER BY id DESC LIMIT 1`;
-        return this.databaseService.get<CalendarEvent>(
-          selectQuery,
-          undefined,
-          this.rowMapper,
-        );
+      .then((calendarEventId: number) => {
+        return this.findOne(calendarEventId);
       });
   }
 
@@ -98,12 +93,12 @@ export class CalendarEventsRepository {
   ): Promise<CalendarEvent> {
     const updateQuery = `
       UPDATE calendar_events
-      SET title = COALESCE(?, title),
-          description = COALESCE(?, description),
-          start_date = COALESCE(?, start_date),
-          end_date = COALESCE(?, end_date),
-          status = COALESCE(?, status),
-          reminder = COALESCE(?, reminder),
+      SET title = ?,
+          description = ?,
+          start_date = ?,
+          end_date = ?,
+          status = ?,
+          reminder = ?,
           updated_by = ?
       WHERE id = ?`;
     return this.databaseService

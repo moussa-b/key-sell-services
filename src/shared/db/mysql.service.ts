@@ -49,6 +49,30 @@ export class MysqlService
     }
   }
 
+  async batchInsert(query: string, params: any[][]): Promise<number> {
+    if (!params.length) {
+      return 0;
+    }
+    let connection: PoolConnection;
+    try {
+      connection = await this.pool.getConnection();
+      // Generate placeholders (?, ?, ?) for each row
+      const placeholders = params
+        .map(() => `(${params[0].map(() => '?').join(', ')})`)
+        .join(', ');
+      const flattenedValues = params.flat();
+      query += ` VALUES ${placeholders}`;
+      const [result]: any = await connection.execute(query, flattenedValues);
+      return result.affectedRows || 0;
+    } catch (err) {
+      throw err;
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
+  }
+
   async get<T>(
     query: string,
     params: any[] = [],

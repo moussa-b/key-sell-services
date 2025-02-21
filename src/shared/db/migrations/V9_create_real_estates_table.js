@@ -3,9 +3,9 @@
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
-  const exists = await knex.schema.hasTable('real_estate');
+  const exists = await knex.schema.hasTable('real_estates');
   if (!exists) {
-    await knex.schema.createTable('real_estate', (table) => {
+    await knex.schema.createTable('real_estates', (table) => {
       table.increments('id').primary();
       table.string('type', 10).notNullable();
       table.boolean('terraced').notNullable().defaultTo(false);
@@ -18,7 +18,7 @@ exports.up = async function (knex) {
       table.boolean('is_secured').defaultTo(false);
       table.text('security_detail').nullable();
       table.integer('facade_count').nullable();
-      table.text('situation').nullable();
+      table.text('location').nullable();
       table.decimal('price', 15, 2).notNullable();
       table.string('price_currency', 10).notNullable();
       table.text('remark').nullable();
@@ -53,7 +53,7 @@ exports.up = async function (knex) {
   }
 
   return knex.schema.raw(`
-    CREATE TRIGGER update_real_estate_updated_at BEFORE UPDATE ON real_estate
+    CREATE TRIGGER update_real_estate_updated_at BEFORE UPDATE ON real_estates
     FOR EACH ROW
     SET NEW.updated_at = CURRENT_TIMESTAMP;
   `);
@@ -64,5 +64,5 @@ exports.up = async function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('real_estate');
+  return knex.schema.dropTableIfExists('real_estates');
 };

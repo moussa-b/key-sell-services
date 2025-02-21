@@ -12,6 +12,8 @@ export class UserAccess {
   canShowSellers = false;
   canEditSellers = false;
   canSendEmail = false;
+  canShowRealEstate = false;
+  canEditRealEstate = false;
 
   constructor(props: { [key: string]: any }) {
     // first give accesses with role
@@ -28,6 +30,8 @@ export class UserAccess {
           this.canShowSellers = true;
           this.canEditSellers = true;
           this.canSendEmail = true;
+          this.canShowRealEstate = true;
+          this.canEditRealEstate = true;
           break;
         case UserRole.ADMIN:
           this.canShowBuyers = true;
@@ -39,6 +43,8 @@ export class UserAccess {
           this.canShowUsersAccess = true;
           this.canEditUsersAccess = true;
           this.canSendEmail = true;
+          this.canShowRealEstate = true;
+          this.canEditRealEstate = true;
           break;
       }
     }
