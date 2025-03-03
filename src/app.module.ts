@@ -8,6 +8,7 @@ import { VersionModule } from './version/version.module';
 import { CalendarEventsModule } from './calendar-events/calendar-events.module';
 import { BuyersModule } from './buyers/buyers.module';
 import { RealEstatesModule } from './real-estates/real-estates.module';
+import { MediasModule } from './medias/medias.module';
 
 @Global()
 @Module({
@@ -21,6 +22,7 @@ import { RealEstatesModule } from './real-estates/real-estates.module';
     CalendarEventsModule,
     BuyersModule,
     RealEstatesModule,
+    MediasModule,
   ],
 })
 export class AppModule {}

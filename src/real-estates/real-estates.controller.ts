@@ -2,39 +2,54 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  Headers,
+  MaxFileSizeValidator,
   NotFoundException,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { RealEstatesService } from './real-estates.service';
-import { CreateRealEstateDto } from './dto/create-real-estate.dto';
-import { UpdateRealEstateDto } from './dto/update-real-estate.dto';
+import { RealEstateDto } from './dto/real-estate.dto';
 import { RealEstate } from './entities/real-estate.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { LabelValue } from '../shared/dto/label-value.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { Request } from 'express';
+import { DateUtils } from '../utils/date-utils';
+import { existsSync, mkdirSync } from 'fs';
+import { Media } from '../medias/entities/media.entity';
+import { MediasService } from '../medias/medias.service';
 
 @Controller('real-estates')
 @UseGuards(JwtAuthGuard)
 export class RealEstatesController {
-  constructor(private readonly realEstateService: RealEstatesService) {}
+  constructor(
+    private readonly realEstateService: RealEstatesService,
+    private readonly mediasService: MediasService,
+  ) {}
 
   @Post()
   create(
-    @Body() createRealEstateDto: CreateRealEstateDto,
+    @Body() createRealEstateDto: RealEstateDto,
     @CurrentUser() user: ConnectedUser,
-  ): Promise<RealEstate> {
+  ): Promise<RealEstateDto> {
     createRealEstateDto.createdBy = user.id;
     return this.realEstateService.create(createRealEstateDto);
   }
 
   @Get()
-  findAll(): Promise<RealEstate[]> {
+  findAll(): Promise<RealEstateDto[]> {
     return this.realEstateService.findAll();
   }
 
@@ -44,14 +59,14 @@ export class RealEstatesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') realEstateId: string): Promise<RealEstate> {
+  findOne(@Param('id') realEstateId: string): Promise<RealEstateDto> {
     return this.realEstateService.findOne(+realEstateId);
   }
 
   @Patch(':id')
   update(
     @Param('id') realEstateId: string,
-    @Body() updateRealEstateDto: UpdateRealEstateDto,
+    @Body() updateRealEstateDto: RealEstateDto,
   ): Promise<RealEstate> {
     return this.realEstateService.update(+realEstateId, updateRealEstateDto);
   }
@@ -69,6 +84,78 @@ export class RealEstatesController {
         +realEstateId,
         realEstate.address?.id,
       ),
+    };
+  }
+
+  @Post(':id/pictures/upload')
+  @UseInterceptors(
+    FilesInterceptor('pictures[]', 10, {
+      storage: diskStorage({
+        destination: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, destination: string) => void,
+        ) => {
+          const id = req.params.id;
+          const uploadspath = process.env.UPLOADS_PATH || './uploads';
+          const uploadPath = `${uploadspath}/pictures/${id}`;
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          callback(null, uploadPath);
+        },
+        filename: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, filename: string) => void,
+        ) => {
+          callback(
+            null,
+            `${DateUtils.formatToFileName(new Date())}_${file.originalname}`,
+          );
+        },
+      }),
+    }),
+  )
+  async uploadPictures(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({ fileType: 'image/(jpg|jpeg|png|gif)' }),
+          new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
+    @Headers('accept-language') acceptLanguage: string,
+    @CurrentUser() user: ConnectedUser,
+    @Param('id') realEstateId: string,
+  ): Promise<Media[]> {
+    return this.realEstateService.uploadPictures(
+      files,
+      acceptLanguage,
+      user.id,
+      realEstateId,
+    );
+  }
+
+  @Delete(':id/pictures/:uuid')
+  async removePicture(
+    @Param('id') realEstateId: string,
+    @Param('uuid') mediaUuid: string,
+  ): Promise<ResponseStatus> {
+    const realEstate = await this.realEstateService.findOne(+realEstateId);
+    if (!realEstate) {
+      throw new NotFoundException(
+        `Real estate with ID ${realEstateId} not found`,
+      );
+    }
+    const media = await this.mediasService.findOneByUuid(mediaUuid, true);
+    if (!media) {
+      throw new NotFoundException(`Media with UUID ${mediaUuid} not found`);
+    }
+    return {
+      status: await this.realEstateService.removePicture(media),
     };
   }
 }

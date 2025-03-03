@@ -12,6 +12,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CalendarEventsHealthIndicator } from '../calendar-events/calendar-events-health.indicator';
 import { BuyersHealthIndicator } from '../buyers/buyers-health.indicator';
 import { RealEstatesHealthIndicator } from '../real-estates/real-estates-health.indicator';
+import { MediasHealthIndicator } from '../medias/medias-health.indicator';
 
 @ApiTags('Health')
 @Controller('health')
@@ -25,6 +26,7 @@ export class HealthController {
     private readonly mailHealthIndicator: MailHealthIndicator,
     private readonly calendarEventsHealthIndicator: CalendarEventsHealthIndicator,
     private readonly realEstateHealthIndicator: RealEstatesHealthIndicator,
+    private readonly mediasHealthIndicator: MediasHealthIndicator,
   ) {}
 
   @Get()
@@ -39,6 +41,7 @@ export class HealthController {
       () => this.mailHealthIndicator.isHealthy(),
       () => this.calendarEventsHealthIndicator.isHealthy(),
       () => this.realEstateHealthIndicator.isHealthy(),
+      () => this.mediasHealthIndicator.isHealthy(),
     ]);
   }
 }

@@ -10,5 +10,7 @@
       "label": "MAD",
       "value": "MAD"
     }
-  ]
+  ],
+  "picture_max_file_size_exceeded": "Total file size exceeds authorised limit (2 Mb)",
+  "no_pictures_attached": "No pictures attached"
 }

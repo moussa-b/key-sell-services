@@ -10,5 +10,7 @@
       "label": "MAD",
       "value": "MAD"
     }
-  ]
+  ],
+  "picture_max_file_size_exceeded": "La taille totale des fichiers dépasse la limite autorisée (2 Mo)",
+  "no_pictures_attached": "Aucune photo en pièce jointe"
 }

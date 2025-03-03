@@ -5,6 +5,7 @@ import { RealEstatesHealthIndicator } from './real-estates-health.indicator';
 import { RealEstatesRepository } from './real-estates.repository';
 import { ConfigService } from '@nestjs/config';
 import { HealthIndicatorService } from '@nestjs/terminus';
+import { MediasModule } from '../medias/medias.module';
 
 @Module({
   controllers: [RealEstatesController],
@@ -15,6 +16,7 @@ import { HealthIndicatorService } from '@nestjs/terminus';
     RealEstatesHealthIndicator,
     HealthIndicatorService,
   ],
+  imports: [MediasModule],
   exports: [RealEstatesHealthIndicator],
 })
 export class RealEstatesModule {}

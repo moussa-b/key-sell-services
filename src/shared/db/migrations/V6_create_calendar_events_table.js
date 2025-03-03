@@ -54,5 +54,5 @@ exports.up = async function (knex) {
 
 exports.down = async function (knex) {
   await knex.raw(`DROP TRIGGER IF EXISTS update_calendar_events_updated_at;`);
-  return knex.schema.dropTable('calendar_events');
+  return knex.schema.dropTableIfExists('calendar_events');
 };

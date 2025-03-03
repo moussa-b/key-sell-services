@@ -3,6 +3,7 @@ Dockerfile
 node_modules
 npm-debug.log
 dist
+uploads
 .env.development.local
 .env.test.local
 .env.production.local
