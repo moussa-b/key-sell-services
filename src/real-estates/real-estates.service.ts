@@ -13,6 +13,10 @@ import * as path from 'path';
 
 @Injectable()
 export class RealEstatesService {
+  public static pictureMaxSize = 2 * 1024 * 1024;
+  public static videoMaxSize = 20 * 1024 * 1024;
+  public static documentMaxSize = 1024 * 1024;
+
   private readonly logger = new Logger(RealEstatesService.name);
 
   constructor(
@@ -52,11 +56,12 @@ export class RealEstatesService {
     return this.realEstateRepository.findAllOwners();
   }
 
-  async uploadPictures(
+  async uploadMedia(
     files: Express.Multer.File[],
     acceptLanguage: string,
     createBy: number,
     realEstateId: string,
+    mediaType: MediaType,
   ): Promise<Media[]> {
     if (!files || files.length === 0) {
       throw new BadRequestException(
@@ -65,9 +70,28 @@ export class RealEstatesService {
         }),
       );
     }
-    console.log(files);
+    let authorizedTotalSize = 0;
+    let errorMessage: string;
+    switch (mediaType) {
+      case MediaType.IMAGE:
+        authorizedTotalSize = RealEstatesService.pictureMaxSize; // 2Mo
+        errorMessage = 'common.picture_max_file_size_exceeded';
+        break;
+      case MediaType.VIDEO:
+        authorizedTotalSize = RealEstatesService.videoMaxSize; // 20Mo
+        errorMessage = 'common.video_max_file_size_exceeded';
+        break;
+      case MediaType.DOCUMENT:
+        authorizedTotalSize = RealEstatesService.documentMaxSize; // 1Mo
+        errorMessage = 'common.document_max_file_size_exceeded';
+        break;
+      default:
+        authorizedTotalSize = RealEstatesService.documentMaxSize;
+        errorMessage = 'common.document_max_file_size_exceeded';
+        break;
+    }
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    if (totalSize > 2 * 1024 * 1024) {
+    if (totalSize > authorizedTotalSize) {
       for (const file of files) {
         unlink(file.path, (err) => {
           if (err) {
@@ -76,7 +100,7 @@ export class RealEstatesService {
         });
       }
       throw new BadRequestException(
-        this.i18nService.translate('common.picture_max_file_size_exceeded', {
+        this.i18nService.translate(errorMessage, {
           lang: acceptLanguage,
         }),
       );

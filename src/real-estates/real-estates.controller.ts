@@ -30,6 +30,48 @@ import { DateUtils } from '../utils/date-utils';
 import { existsSync, mkdirSync } from 'fs';
 import { Media } from '../medias/entities/media.entity';
 import { MediasService } from '../medias/medias.service';
+import { MediaType } from '../medias/entities/media-type.enum';
+
+const getFilename = (
+  req: Request,
+  file: Express.Multer.File,
+  callback: (error: Error | null, filename: string) => void,
+) => {
+  callback(
+    null,
+    `${DateUtils.formatToFileName(new Date())}_${file.originalname}`,
+  );
+};
+
+const getDestination = (
+  req: Request,
+  file: Express.Multer.File,
+  callback: (error: Error | null, destination: string) => void,
+  mediaType: MediaType,
+) => {
+  const id = req.params.id;
+  const uploadspath = process.env.UPLOADS_PATH || './uploads';
+  let subfolder: string;
+  switch (mediaType) {
+    case MediaType.IMAGE:
+      subfolder = 'pictures';
+      break;
+    case MediaType.VIDEO:
+      subfolder = 'videos';
+      break;
+    case MediaType.DOCUMENT:
+      subfolder = 'documents';
+      break;
+    default:
+      subfolder = 'documents';
+      break;
+  }
+  const uploadPath = `${uploadspath}/${subfolder}/${id}`;
+  if (!existsSync(uploadPath)) {
+    mkdirSync(uploadPath, { recursive: true });
+  }
+  callback(null, uploadPath);
+};
 
 @Controller('real-estates')
 @UseGuards(JwtAuthGuard)
@@ -95,25 +137,8 @@ export class RealEstatesController {
           req: Request,
           file: Express.Multer.File,
           callback: (error: Error | null, destination: string) => void,
-        ) => {
-          const id = req.params.id;
-          const uploadspath = process.env.UPLOADS_PATH || './uploads';
-          const uploadPath = `${uploadspath}/pictures/${id}`;
-          if (!existsSync(uploadPath)) {
-            mkdirSync(uploadPath, { recursive: true });
-          }
-          callback(null, uploadPath);
-        },
-        filename: (
-          req: Request,
-          file: Express.Multer.File,
-          callback: (error: Error | null, filename: string) => void,
-        ) => {
-          callback(
-            null,
-            `${DateUtils.formatToFileName(new Date())}_${file.originalname}`,
-          );
-        },
+        ) => getDestination(req, file, callback, MediaType.IMAGE),
+        filename: getFilename,
       }),
     }),
   )
@@ -122,7 +147,9 @@ export class RealEstatesController {
       new ParseFilePipe({
         validators: [
           new FileTypeValidator({ fileType: 'image/(jpg|jpeg|png|gif)' }),
-          new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }),
+          new MaxFileSizeValidator({
+            maxSize: RealEstatesService.pictureMaxSize,
+          }),
         ],
       }),
     )
@@ -131,15 +158,94 @@ export class RealEstatesController {
     @CurrentUser() user: ConnectedUser,
     @Param('id') realEstateId: string,
   ): Promise<Media[]> {
-    return this.realEstateService.uploadPictures(
+    return this.realEstateService.uploadMedia(
       files,
       acceptLanguage,
       user.id,
       realEstateId,
+      MediaType.IMAGE,
+    );
+  }
+
+  @Post(':id/videos/upload')
+  @UseInterceptors(
+    FilesInterceptor('videos[]', 10, {
+      storage: diskStorage({
+        destination: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, destination: string) => void,
+        ) => getDestination(req, file, callback, MediaType.VIDEO),
+        filename: getFilename,
+      }),
+    }),
+  )
+  async uploadVideos(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({ fileType: 'video/(mp4|avi|mov|mkv)' }),
+          new MaxFileSizeValidator({
+            maxSize: RealEstatesService.videoMaxSize,
+          }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
+    @Headers('accept-language') acceptLanguage: string,
+    @CurrentUser() user: ConnectedUser,
+    @Param('id') realEstateId: string,
+  ): Promise<Media[]> {
+    return this.realEstateService.uploadMedia(
+      files,
+      acceptLanguage,
+      user.id,
+      realEstateId,
+      MediaType.VIDEO,
+    );
+  }
+
+  @Post(':id/documents/upload')
+  @UseInterceptors(
+    FilesInterceptor('documents[]', 10, {
+      storage: diskStorage({
+        destination: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, destination: string) => void,
+        ) => getDestination(req, file, callback, MediaType.DOCUMENT),
+        filename: getFilename,
+      }),
+    }),
+  )
+  async uploadDocuments(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({ fileType: 'application/pdf' }),
+          new MaxFileSizeValidator({
+            maxSize: RealEstatesService.documentMaxSize,
+          }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
+    @Headers('accept-language') acceptLanguage: string,
+    @CurrentUser() user: ConnectedUser,
+    @Param('id') realEstateId: string,
+  ): Promise<Media[]> {
+    return this.realEstateService.uploadMedia(
+      files,
+      acceptLanguage,
+      user.id,
+      realEstateId,
+      MediaType.DOCUMENT,
     );
   }
 
   @Delete(':id/pictures/:uuid')
+  @Delete(':id/videos/:uuid')
+  @Delete(':id/documents/:uuid')
   async removePicture(
     @Param('id') realEstateId: string,
     @Param('uuid') mediaUuid: string,
