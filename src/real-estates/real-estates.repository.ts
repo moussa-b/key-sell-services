@@ -310,7 +310,7 @@ export class RealEstatesRepository {
     );
   }
 
-  linkMediaToRealEstate(realEstateId: string, createdMedias: Media[]) {
+  linkMediaToRealEstate(realEstateId: number, createdMedias: Media[]) {
     const insertQuery = `INSERT INTO real_estates_media (real_estate_id, media_id)`;
     this.databaseService.batchInsert(
       insertQuery,

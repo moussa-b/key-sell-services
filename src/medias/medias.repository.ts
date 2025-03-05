@@ -3,6 +3,7 @@ import { DatabaseService } from '../shared/db/database-service';
 import { Media } from './entities/media.entity';
 import { DateUtils } from '../utils/date-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { MediaType } from './entities/media-type.enum';
 
 @Injectable()
 export class MediasRepository {
@@ -71,5 +72,16 @@ export class MediasRepository {
         })
         .catch((err) => reject(err));
     });
+  }
+
+  findAllMediaByRealEstateIdAndMediaType(
+    realEstateId: number,
+    mediaType: MediaType,
+  ): Promise<Media[]> {
+    return this.databaseService.all<Media>(
+      'SELECT m.* FROM real_estates_media rem LEFT JOIN medias m ON m.id = rem.media_id WHERE real_estate_id = ? AND m.media_type = ?',
+      [realEstateId, mediaType],
+      this.rowMapper,
+    );
   }
 }

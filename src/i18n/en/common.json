@@ -14,5 +14,8 @@
   "picture_max_file_size_exceeded": "Total file size exceeds authorised limit (2 Mb)",
   "video_max_file_size_exceeded": "Total file size exceeds authorised limit (20 Mb)",
   "document_max_file_size_exceeded": "Total file size exceeds authorised limit (1 Mb)",
+  "picture_max_file_count_exceeded": "The total number of pictures exceeds the allowed limit (10)",
+  "video_max_file_count_exceeded": "The total number of photos exceeds the authorized limit (1)",
+  "document_max_file_count_exceeded": "The total number of photos exceeds the authorized limit (5)",
   "no_pictures_attached": "No pictures attached"
 }

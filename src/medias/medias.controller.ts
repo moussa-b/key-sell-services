@@ -16,7 +16,7 @@ import { Response } from 'express';
 export class MediasController {
   constructor(private readonly mediasService: MediasService) {}
 
-  @Get('pictures/:uuid')
+  @Get(['pictures/:uuid', 'videos/:uuid', 'documents/:uuid'])
   async getPicture(@Param('uuid') mediaUuid: string, @Res() res: Response) {
     const media = await this.mediasService.findOneByUuid(mediaUuid, true);
     if (!media) {

@@ -13,9 +13,12 @@ import * as path from 'path';
 
 @Injectable()
 export class RealEstatesService {
-  public static pictureMaxSize = 2 * 1024 * 1024;
-  public static videoMaxSize = 20 * 1024 * 1024;
-  public static documentMaxSize = 1024 * 1024;
+  public static pictureMaxSize = 2 * 1024 * 1024; // 2Mo
+  public static videoMaxSize = 20 * 1024 * 1024; // 20Mo
+  public static documentMaxSize = 1024 * 1024; // 1Mo
+  public static pictureMaxCount = 10;
+  public static videoMaxCount = 1;
+  public static documentMaxCount = 5;
 
   private readonly logger = new Logger(RealEstatesService.name);
 
@@ -60,7 +63,7 @@ export class RealEstatesService {
     files: Express.Multer.File[],
     acceptLanguage: string,
     createBy: number,
-    realEstateId: string,
+    realEstateId: number,
     mediaType: MediaType,
   ): Promise<Media[]> {
     if (!files || files.length === 0) {
@@ -70,28 +73,52 @@ export class RealEstatesService {
         }),
       );
     }
-    let authorizedTotalSize = 0;
-    let errorMessage: string;
+    let authorizedTotalSize: number;
+    let authorizedFileCount: number;
+    let fileSizeMessage: string;
+    let fileCountMessage: string;
     switch (mediaType) {
       case MediaType.IMAGE:
-        authorizedTotalSize = RealEstatesService.pictureMaxSize; // 2Mo
-        errorMessage = 'common.picture_max_file_size_exceeded';
+        authorizedTotalSize = RealEstatesService.pictureMaxSize;
+        authorizedFileCount = RealEstatesService.pictureMaxCount;
+        fileSizeMessage = 'common.picture_max_file_size_exceeded';
+        fileCountMessage = 'common.picture_max_file_count_exceeded';
         break;
       case MediaType.VIDEO:
-        authorizedTotalSize = RealEstatesService.videoMaxSize; // 20Mo
-        errorMessage = 'common.video_max_file_size_exceeded';
+        authorizedTotalSize = RealEstatesService.videoMaxSize;
+        fileSizeMessage = 'common.video_max_file_size_exceeded';
+        fileCountMessage = 'common.video_max_file_count_exceeded';
+        authorizedFileCount = RealEstatesService.videoMaxCount;
         break;
       case MediaType.DOCUMENT:
-        authorizedTotalSize = RealEstatesService.documentMaxSize; // 1Mo
-        errorMessage = 'common.document_max_file_size_exceeded';
+        authorizedTotalSize = RealEstatesService.documentMaxSize;
+        fileSizeMessage = 'common.document_max_file_size_exceeded';
+        fileCountMessage = 'common.document_max_file_count_exceeded';
+        authorizedFileCount = RealEstatesService.documentMaxCount;
         break;
       default:
         authorizedTotalSize = RealEstatesService.documentMaxSize;
-        errorMessage = 'common.document_max_file_size_exceeded';
+        fileSizeMessage = 'common.document_max_file_size_exceeded';
+        authorizedFileCount = RealEstatesService.documentMaxCount;
+        fileCountMessage = 'common.document_max_file_count_exceeded';
         break;
     }
-    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    if (totalSize > authorizedTotalSize) {
+    let totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    let fileCount = files.length;
+    const medias =
+      await this.mediasService.findAllMediaByRealEstateIdAndMediaType(
+        realEstateId,
+        mediaType,
+      );
+    if (medias?.length > 0) {
+      fileCount += medias?.length;
+      const mediaSize = medias.reduce(
+        (sum: number, media: Media) => sum + media.fileSize,
+        0,
+      );
+      totalSize += mediaSize;
+    }
+    if (totalSize > authorizedTotalSize || fileCount > authorizedFileCount) {
       for (const file of files) {
         unlink(file.path, (err) => {
           if (err) {
@@ -100,9 +127,12 @@ export class RealEstatesService {
         });
       }
       throw new BadRequestException(
-        this.i18nService.translate(errorMessage, {
-          lang: acceptLanguage,
-        }),
+        this.i18nService.translate(
+          fileCount > authorizedFileCount ? fileCountMessage : fileSizeMessage,
+          {
+            lang: acceptLanguage,
+          },
+        ),
       );
     }
 
@@ -112,7 +142,7 @@ export class RealEstatesService {
       media.absolutePath = path.resolve(file.path);
       media.fileName = file.originalname;
       media.fileSize = file.size;
-      media.mediaType = MediaType.IMAGE;
+      media.mediaType = mediaType;
       media.mimeType = file.mimetype;
       media.createdBy = createBy;
       createdMedias.push(await this.mediasService.create(media));

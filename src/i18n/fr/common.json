@@ -14,5 +14,8 @@
   "picture_max_file_size_exceeded": "La taille totale des fichiers dépasse la limite autorisée (2 Mo)",
   "video_max_file_size_exceeded": "La taille totale des fichiers dépasse la limite autorisée (20 Mo)",
   "document_max_file_size_exceeded": "La taille totale des fichiers dépasse la limite autorisée (1 Mo)",
+  "picture_max_file_count_exceeded": "Le nombre totale de photos dépasse la limite autorisée (10)",
+  "video_max_file_count_exceeded": "Le nombre totale de photos dépasse la limite autorisée (1)",
+  "document_max_file_count_exceeded": "Le nombre totale de photos dépasse la limite autorisée (5)",
   "no_pictures_attached": "Aucune photo en pièce jointe"
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { MediasRepository } from './medias.repository';
 import { Media } from './entities/media.entity';
+import { MediaType } from './entities/media-type.enum';
 
 @Injectable()
 export class MediasService {
@@ -16,6 +17,16 @@ export class MediasService {
 
   async findOneByUuid(uuid: string, includePath = false): Promise<Media> {
     return this.mediasRepository.findOneByUuid(uuid, includePath);
+  }
+
+  async findAllMediaByRealEstateIdAndMediaType(
+    realEstateId: number,
+    mediaType: MediaType,
+  ): Promise<Media[]> {
+    return this.mediasRepository.findAllMediaByRealEstateIdAndMediaType(
+      realEstateId,
+      mediaType,
+    );
   }
 
   async remove(id: number): Promise<boolean> {

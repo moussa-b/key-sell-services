@@ -162,7 +162,7 @@ export class RealEstatesController {
       files,
       acceptLanguage,
       user.id,
-      realEstateId,
+      +realEstateId,
       MediaType.IMAGE,
     );
   }
@@ -200,7 +200,7 @@ export class RealEstatesController {
       files,
       acceptLanguage,
       user.id,
-      realEstateId,
+      +realEstateId,
       MediaType.VIDEO,
     );
   }
@@ -238,7 +238,7 @@ export class RealEstatesController {
       files,
       acceptLanguage,
       user.id,
-      realEstateId,
+      +realEstateId,
       MediaType.DOCUMENT,
     );
   }
