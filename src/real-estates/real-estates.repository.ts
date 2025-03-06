@@ -26,14 +26,14 @@ export class RealEstatesRepository {
     const realEstate = new RealEstateDto();
     realEstate.id = row['id'];
     realEstate.type = row['type'] || RealEstateType.NONE;
-    realEstate.terraced = row['terraced'];
+    realEstate.terraced = row['terraced'] === 1;
     realEstate.surface = row['surface'];
     realEstate.roomCount = row['room_count'];
     realEstate.showerCount = row['shower_count'];
     realEstate.terraceCount = row['terrace_count'];
-    realEstate.hasGarden = row['has_garden'];
+    realEstate.hasGarden = row['has_garden'] === 1;
     realEstate.gardenSurface = row['garden_surface'];
-    realEstate.isSecured = row['is_secured'];
+    realEstate.isSecured = row['is_secured'] === 1;
     realEstate.securityDetail = row['security_detail'];
     realEstate.facadeCount = row['facade_count'];
     realEstate.location = row['location'];
