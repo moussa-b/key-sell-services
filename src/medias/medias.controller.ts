@@ -25,7 +25,11 @@ export class MediasController {
     if (!existsSync(media.absolutePath)) {
       throw new NotFoundException(`Media with UUID ${mediaUuid} not found`);
     }
-
+    res.setHeader('Content-Type', `${media.mimeType}`);
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${media.fileName}"`,
+    );
     const fileStream = createReadStream(media.absolutePath);
     fileStream.pipe(res);
   }

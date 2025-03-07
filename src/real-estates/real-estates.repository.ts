@@ -146,7 +146,7 @@ export class RealEstatesRepository {
               (SELECT CASE
                           WHEN COUNT(m.id) > 0
                               THEN JSON_ARRAYAGG(JSON_OBJECT("id", m.id, "uuid", m.uuid, "file_name", m.file_name,
-                                                             "media_type", m.media_type, "file_size", m.file_size,
+                                                             "media_type", m.media_type, "mime_type", m.mime_type, "file_size", m.file_size,
                                                              "created_by", m.created_by, "created_at", m.created_at))
                           ELSE JSON_ARRAY()
                           END
@@ -192,7 +192,7 @@ export class RealEstatesRepository {
               (SELECT CASE
                           WHEN COUNT(m.id) > 0
                               THEN JSON_ARRAYAGG(JSON_OBJECT("id", m.id, "uuid", m.uuid, "file_name", m.file_name,
-                                                             "media_type", m.media_type, "file_size", m.file_size,
+                                                             "media_type", m.media_type, "mime_type", m.mime_type, "file_size", m.file_size,
                                                              "created_by", m.created_by, "created_at", m.created_at))
                           ELSE JSON_ARRAY()
                           END
