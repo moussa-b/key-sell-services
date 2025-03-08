@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MediasService } from './medias.service';
-import { createReadStream, existsSync } from 'fs';
+import { createReadStream, existsSync } from 'fs-extra';
 import { Response } from 'express';
 
 @Controller('medias')

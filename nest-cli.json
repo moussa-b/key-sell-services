@@ -16,6 +16,10 @@
         "watchAssets": true
       },
       {
+        "include": "shared/pdf/templates/",
+        "watchAssets": true
+      },
+      {
         "include": "i18n/**/*",
         "watchAssets": true
       }

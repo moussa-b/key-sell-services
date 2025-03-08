@@ -11,6 +11,7 @@ import {
   ParseFilePipe,
   Patch,
   Post,
+  Res,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -25,9 +26,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { DateUtils } from '../utils/date-utils';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs-extra';
 import { Media } from '../medias/entities/media.entity';
 import { MediasService } from '../medias/medias.service';
 import { MediaType } from '../medias/entities/media-type.enum';
@@ -263,5 +264,18 @@ export class RealEstatesController {
     return {
       status: await this.realEstateService.removePicture(media),
     };
+  }
+
+  @Get(':id/export')
+  async export(
+    @Param('id') realEstateId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const pdfBuffer = await this.realEstateService.export(+realEstateId);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${DateUtils.formatToFileName(new Date())}_export_${realEstateId}.pdf"`,
+    });
+    res.send(pdfBuffer);
   }
 }

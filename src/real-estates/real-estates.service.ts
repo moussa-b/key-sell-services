@@ -4,12 +4,12 @@ import { RealEstatesRepository } from './real-estates.repository';
 import { LabelValue } from '../shared/dto/label-value.dto';
 import { AddressesService } from '../shared/addresses.service';
 import { I18nService } from 'nestjs-i18n';
-import * as fs from 'fs';
-import { unlink } from 'fs';
+import { unlink, readdirSync, rmdirSync } from 'fs-extra';
 import { Media } from '../medias/entities/media.entity';
 import { MediaType } from '../medias/entities/media-type.enum';
 import { MediasService } from '../medias/medias.service';
 import * as path from 'path';
+import { PdfService } from '../shared/pdf/pdf.service';
 
 @Injectable()
 export class RealEstatesService {
@@ -27,6 +27,7 @@ export class RealEstatesService {
     private readonly addressesService: AddressesService,
     private readonly i18nService: I18nService,
     private readonly mediasService: MediasService,
+    private readonly pdfService: PdfService,
   ) {}
 
   async create(createRealEstateDto: RealEstateDto): Promise<RealEstateDto> {
@@ -169,12 +170,17 @@ export class RealEstatesService {
 
   removeFolderIfEmpty(folderPath: string) {
     try {
-      const files = fs.readdirSync(folderPath);
+      const files = readdirSync(folderPath);
       if (files.length === 0) {
-        fs.rmdirSync(folderPath); // Remove the empty folder
+        rmdirSync(folderPath); // Remove the empty folder
       }
     } catch (err) {
       this.logger.error(`Failed to delete folder: ${folderPath}`, err);
     }
+  }
+
+  async export(realEstateId: number): Promise<Buffer> {
+    const realEstate = await this.findOne(+realEstateId);
+    return await this.pdfService.generatePdf('real-estate', realEstate);
   }
 }

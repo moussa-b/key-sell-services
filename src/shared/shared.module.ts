@@ -16,6 +16,7 @@ import { AddressesRepository } from './addresses.repository';
 import { AddressesService } from './addresses.service';
 import { CommonController } from './common.controller';
 import { CommonService } from './common.service';
+import { PdfService } from './pdf/pdf.service';
 
 @Global()
 @Module({
@@ -54,6 +55,7 @@ import { CommonService } from './common.service';
     AddressesRepository,
     AddressesService,
     CommonService,
+    PdfService,
   ],
   exports: [
     DatabaseService,
@@ -62,6 +64,7 @@ import { CommonService } from './common.service';
     MailHealthIndicator,
     AddressesRepository,
     AddressesService,
+    PdfService,
   ],
   controllers: [CommonController],
 })

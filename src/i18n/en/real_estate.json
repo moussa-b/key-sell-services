@@ -1,0 +1,16 @@
+{
+  "type": "Type of real estate",
+  "address": "Address",
+  "price": "Price",
+  "surface": "Surface area",
+  "owner_or_owners": "Owner(s)",
+  "room_count": "Number of rooms",
+  "shower_count": "Number of showers",
+  "facade_count": "Number of facades",
+  "terrace_count": "Number of terraces",
+  "terraced": "Terraced",
+  "has_garden": "With garden",
+  "is_secured": "Secure",
+  "remarks": "Remarks",
+  "real_estate_detail": "Real estate details"
+}

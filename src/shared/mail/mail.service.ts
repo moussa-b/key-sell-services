@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
 import { MailRepository } from './mail.repository';
 import { MailAudit } from './entities/mail-audit.entity';
-import * as fs from 'fs';
+import { readFile } from 'fs-extra';
 import * as handlebars from 'handlebars';
 
 @Injectable()
@@ -85,7 +85,7 @@ export class MailService {
         subject: subject,
         ...configuration,
       },
-      (
+      async (
         err: Error,
         info: { messageId: string; envelope: { from: string; to: string[] } },
       ) => {
@@ -96,7 +96,7 @@ export class MailService {
         if (info.envelope) {
           let content: string;
           if (configuration.template) {
-            content = this.compileTemplate(
+            content = await this.compileTemplate(
               configuration.template,
               configuration.context,
             );
@@ -118,10 +118,13 @@ export class MailService {
     );
   }
 
-  compileTemplate(templateName: string, context: any): string | undefined {
+  async compileTemplate(
+    templateName: string,
+    context: any,
+  ): Promise<string | undefined> {
     const filePath = path.join(__dirname, 'templates', `${templateName}.hbs`);
     try {
-      const source = fs.readFileSync(filePath, 'utf8');
+      const source = await readFile(filePath, 'utf8');
       const template = handlebars.compile(source);
       return template(context);
     } catch (e) {
