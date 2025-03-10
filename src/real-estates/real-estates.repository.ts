@@ -22,7 +22,7 @@ export class RealEstatesRepository {
     return labelValue;
   }
 
-  rowMapper(row: any): RealEstateDto {
+  rowMapper(row: any, includeMediaPath = false): RealEstateDto {
     const realEstate = new RealEstateDto();
     realEstate.id = row['id'];
     realEstate.type = row['type'] || RealEstateType.NONE;
@@ -52,9 +52,13 @@ export class RealEstatesRepository {
         : DateUtils.createDateFromDatabaseDate(row['updated_at']);
     realEstate.owners = row['owners'];
     realEstate.ownersDetails = row['owners_detail'];
-    realEstate.medias = row['medias'].map(
-      (mediaRow: any) => new Media(mediaRow),
-    );
+    realEstate.medias = row['medias'].map((mediaRow: any) => {
+      const media = new Media(mediaRow);
+      if (!includeMediaPath) {
+        media.absolutePath = undefined;
+      }
+      return media;
+    });
     if (row['addressId']) {
       realEstate.address = new Address({
         id: row['addressId'],
@@ -162,7 +166,10 @@ export class RealEstatesRepository {
     );
   }
 
-  findOne(realEstateId: number): Promise<RealEstateDto> {
+  findOne(
+    realEstateId: number,
+    includeMediaPath = false,
+  ): Promise<RealEstateDto> {
     return this.databaseService.get<RealEstateDto>(
       `SELECT re.*,
               a.id AS addressId,
@@ -192,7 +199,7 @@ export class RealEstatesRepository {
               (SELECT CASE
                           WHEN COUNT(m.id) > 0
                               THEN JSON_ARRAYAGG(JSON_OBJECT("id", m.id, "uuid", m.uuid, "file_name", m.file_name,
-                                                             "media_type", m.media_type, "mime_type", m.mime_type, "file_size", m.file_size,
+                                                             "media_type", m.media_type, "mime_type", m.mime_type, "absolute_path", m.absolute_path, "file_size", m.file_size,
                                                              "created_by", m.created_by, "created_at", m.created_at))
                           ELSE JSON_ARRAY()
                           END
@@ -204,7 +211,7 @@ export class RealEstatesRepository {
                 LEFT JOIN addresses a ON re.address_id = a.id
        WHERE re.id = ?`,
       [realEstateId],
-      this.rowMapper,
+      (row: any) => this.rowMapper(row, includeMediaPath),
     );
   }
 

@@ -272,8 +272,17 @@ export class RealEstatesController {
     @Res({ passthrough: true }) res: Response,
     @Headers('accept-language') acceptLanguage: string,
   ) {
-    const pdfBuffer = await this.realEstateService.export(
+    const realEstate = await this.realEstateService.findOne(
       +realEstateId,
+      true,
+    );
+    if (!realEstate) {
+      throw new NotFoundException(
+        `Real estate with ID ${realEstate} not found`,
+      );
+    }
+    const pdfBuffer = await this.realEstateService.export(
+      realEstate,
       acceptLanguage,
     );
     res.set({

@@ -107,9 +107,4 @@ export class PdfService {
     await browser.close();
     return Buffer.from(pdfBuffer);
   }
-
-  private async convertImageToBase64(imagePath: string): Promise<string> {
-    const imageBuffer = await readFile(imagePath);
-    return `data:image/png;base64,${imageBuffer.toString('base64')}`;
-  }
 }

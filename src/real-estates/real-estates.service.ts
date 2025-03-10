@@ -4,7 +4,7 @@ import { RealEstatesRepository } from './real-estates.repository';
 import { LabelValue } from '../shared/dto/label-value.dto';
 import { AddressesService } from '../shared/addresses.service';
 import { I18nService } from 'nestjs-i18n';
-import { unlink, readdirSync, rmdirSync } from 'fs-extra';
+import { readdirSync, readFile, rmdirSync, unlink } from 'fs-extra';
 import { Media } from '../medias/entities/media.entity';
 import { MediaType } from '../medias/entities/media-type.enum';
 import { MediasService } from '../medias/medias.service';
@@ -38,8 +38,11 @@ export class RealEstatesService {
     return this.realEstateRepository.findAll();
   }
 
-  async findOne(realEstateId: number): Promise<RealEstateDto> {
-    return this.realEstateRepository.findOne(realEstateId);
+  async findOne(
+    realEstateId: number,
+    includeMediaPath = false,
+  ): Promise<RealEstateDto> {
+    return this.realEstateRepository.findOne(realEstateId, includeMediaPath);
   }
 
   async update(
@@ -179,12 +182,35 @@ export class RealEstatesService {
     }
   }
 
-  async export(realEstateId: number, acceptLanguage: string): Promise<Buffer> {
-    const realEstate = await this.findOne(+realEstateId);
+  async export(
+    realEstate: RealEstateDto,
+    acceptLanguage: string,
+  ): Promise<Buffer> {
+    const context = { ...realEstate, pictures: [] };
+    if (realEstate.medias?.length > 0) {
+      const images = realEstate.medias
+        .filter(
+          (m: Media) =>
+            m.mediaType === MediaType.IMAGE && m.absolutePath?.length > 0,
+        )
+        .map((m: Media) => m.absolutePath);
+      if (images.length > 0) {
+        context.pictures = await Promise.all(
+          images.map(async (file: string) => {
+            return await this.convertImageToBase64(file);
+          }),
+        );
+      }
+    }
     return await this.pdfService.generatePdf(
       'real-estate',
-      realEstate,
+      context,
       acceptLanguage,
     );
+  }
+
+  private async convertImageToBase64(imagePath: string): Promise<string> {
+    const imageBuffer = await readFile(imagePath);
+    return `data:image/png;base64,${imageBuffer.toString('base64')}`;
   }
 }
