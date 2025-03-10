@@ -270,8 +270,12 @@ export class RealEstatesController {
   async export(
     @Param('id') realEstateId: string,
     @Res({ passthrough: true }) res: Response,
+    @Headers('accept-language') acceptLanguage: string,
   ) {
-    const pdfBuffer = await this.realEstateService.export(+realEstateId);
+    const pdfBuffer = await this.realEstateService.export(
+      +realEstateId,
+      acceptLanguage,
+    );
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${DateUtils.formatToFileName(new Date())}_export_${realEstateId}.pdf"`,

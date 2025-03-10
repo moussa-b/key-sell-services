@@ -12,5 +12,9 @@
   "has_garden": "Avec jardin",
   "is_secured": "Sécurisé",
   "remarks": "Remarques",
-  "real_estate_detail": "Détails du bien immobilier"
+  "real_estate_detail": "Détails du bien immobilier",
+  "house": "Maison",
+  "apartment": "Appartement",
+  "villa": "Villa",
+  "other": "Autre"
 }

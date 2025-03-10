@@ -179,8 +179,12 @@ export class RealEstatesService {
     }
   }
 
-  async export(realEstateId: number): Promise<Buffer> {
+  async export(realEstateId: number, acceptLanguage: string): Promise<Buffer> {
     const realEstate = await this.findOne(+realEstateId);
-    return await this.pdfService.generatePdf('real-estate', realEstate);
+    return await this.pdfService.generatePdf(
+      'real-estate',
+      realEstate,
+      acceptLanguage,
+    );
   }
 }

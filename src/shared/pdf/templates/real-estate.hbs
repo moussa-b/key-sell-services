@@ -4,6 +4,20 @@
   <meta charset="utf-8">
   <title>{{i18n 'real_estate.real_estate_detail' lang=lang}}</title>
   <style>
+         font-face {
+             font-family: 'Roboto';
+             src: url('file://{{fontPath}}') format('truetype');
+         }
+
+         body {
+             margin: 50px;
+             font-family: 'Roboto', sans-serif;
+         }
+
+         h2 {
+            padding: 20px 0;
+         }
+
         .grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -26,8 +40,8 @@
           color: #2563eb;
         }
 
-        .font-semibold {
-          font-weight: 600;
+        .font-bold {
+          font-weight: bold;
         }
 
         .italic {
@@ -36,45 +50,46 @@
     </style>
 </head>
 <body>
+  <h2>{{i18n 'real_estate.real_estate_detail' lang=lang}}</h2>
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.type' lang=lang}}</strong> {{type}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.type' lang=lang}}</strong> : <span class="font-bold">{{formatRealEstateType type lang=lang}}</span>
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.address' lang=lang}}</strong> {{address}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.address' lang=lang}}</strong> : {{formatAddress address}}
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.price' lang=lang}}</strong> <span class="text-green-600 font-semibold">{{price}} MAD</span>
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.price' lang=lang}}</strong> : <span class="font-bold">{{price}} MAD</span>
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.surface' lang=lang}}</strong> {{surface}} m²
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.surface' lang=lang}}</strong> : <span class="font-bold">{{surface}} m²</span>
     </div>
     <div class="col-span-2">
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.owner_or_owners' lang=lang}}</strong> {{owners}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.owner_or_owners' lang=lang}}</strong> : {{formatOwners ownersDetails}}
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.room_count' lang=lang}}</strong> {{roomCount}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.room_count' lang=lang}}</strong> : {{roomCount}}
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.shower_count' lang=lang}}</strong> {{showerCount}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.shower_count' lang=lang}}</strong> : {{showerCount}}
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.facade_count' lang=lang}}</strong> {{facadeCount}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.facade_count' lang=lang}}</strong> : {{facadeCount}}
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.terrace_count' lang=lang}}</strong> {{terraceCount}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.terrace_count' lang=lang}}</strong> : {{terraceCount}}
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.terraced' lang=lang}}</strong> {{terraced}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.terraced' lang=lang}}</strong> : {{formatBoolean terraced lang=lang}}
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.has_garden' lang=lang}}</strong> {{hasGarden}} <span class="text-green-600 font-semibold">({{gardenSurface}} m²)</span>
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.has_garden' lang=lang}}</strong> : {{formatBoolean hasGarden lang=lang}} ({{gardenSurface}} m²)
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.is_secured' lang=lang}}</strong> {{isSecured}} <span class="text-blue-600 font-semibold">({{securityDetail}})</span>
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.is_secured' lang=lang}}</strong> : {{formatBoolean isSecured lang=lang}} ({{securityDetail}})
     </div>
     <div>
-      <strong class="font-bold text-gray-700">{{i18n 'real_estate.remarks' lang=lang}}</strong> {{remark}}
+      <strong class="font-bold text-gray-700">{{i18n 'real_estate.remarks' lang=lang}}</strong> : {{remark}}
     </div>
   </div>
 

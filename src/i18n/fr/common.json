@@ -17,5 +17,8 @@
   "picture_max_file_count_exceeded": "Le nombre totale de photos dépasse la limite autorisée (10)",
   "video_max_file_count_exceeded": "Le nombre totale de photos dépasse la limite autorisée (1)",
   "document_max_file_count_exceeded": "Le nombre totale de photos dépasse la limite autorisée (5)",
-  "no_pictures_attached": "Aucune photo en pièce jointe"
+  "no_pictures_attached": "Aucune photo en pièce jointe",
+  "yes": "Oui",
+  "no": "Non",
+  "not_specified": "Non renseigné"
 }

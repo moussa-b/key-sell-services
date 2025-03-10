@@ -12,5 +12,9 @@
   "has_garden": "With garden",
   "is_secured": "Secure",
   "remarks": "Remarks",
-  "real_estate_detail": "Real estate details"
+  "real_estate_detail": "Real estate details",
+  "house": "House",
+  "apartment": "Apartment",
+  "villa": "Villa",
+  "other": "Other"
 }
