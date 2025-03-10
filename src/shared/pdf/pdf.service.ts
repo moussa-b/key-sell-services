@@ -8,6 +8,7 @@ import { I18nService } from 'nestjs-i18n';
 import { RealEstateType } from '../../real-estates/entities/real-estate-type.enum';
 import { Address } from '../models/address.entity';
 import { LabelValue } from '../dto/label-value.dto';
+import { PDFDocument } from 'pdf-lib';
 
 @Injectable()
 export class PdfService {
@@ -90,6 +91,7 @@ export class PdfService {
     templateName: string,
     context: any,
     acceptLanguage: string,
+    pdfFilesToMerge?: string[],
   ): Promise<Buffer> {
     const templatePath = path.join(
       __dirname,
@@ -105,6 +107,26 @@ export class PdfService {
     await page.setContent(html, { waitUntil: 'networkidle0' });
     const pdfBuffer = await page.pdf({ format: 'A4' });
     await browser.close();
-    return Buffer.from(pdfBuffer);
+    const buffer = Buffer.from(pdfBuffer);
+    if (pdfFilesToMerge?.length > 0) {
+      const pdfBuffers: Buffer[] = [buffer];
+      for (const file of pdfFilesToMerge) {
+        const pdfBuffer = await readFile(file);
+        pdfBuffers.push(pdfBuffer);
+      }
+      const mergedPdf = await PDFDocument.create();
+      for (const pdfBuffer of pdfBuffers) {
+        const pdfDoc = await PDFDocument.load(pdfBuffer);
+        const pages = await mergedPdf.copyPages(
+          pdfDoc,
+          pdfDoc.getPageIndices(),
+        );
+        pages.forEach((page) => mergedPdf.addPage(page));
+      }
+      const mergedPdfBuffer = await mergedPdf.save();
+      return Buffer.from(mergedPdfBuffer);
+    } else {
+      return buffer;
+    }
   }
 }

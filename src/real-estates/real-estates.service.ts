@@ -187,11 +187,18 @@ export class RealEstatesService {
     acceptLanguage: string,
   ): Promise<Buffer> {
     const context = { ...realEstate, pictures: [] };
+    let pdfFilesToMerge: string[];
     if (realEstate.medias?.length > 0) {
       const images = realEstate.medias
         .filter(
           (m: Media) =>
             m.mediaType === MediaType.IMAGE && m.absolutePath?.length > 0,
+        )
+        .map((m: Media) => m.absolutePath);
+      pdfFilesToMerge = realEstate.medias
+        .filter(
+          (m: Media) =>
+            m.mediaType === MediaType.DOCUMENT && m.absolutePath?.length > 0,
         )
         .map((m: Media) => m.absolutePath);
       if (images.length > 0) {
@@ -206,6 +213,7 @@ export class RealEstatesService {
       'real-estate',
       context,
       acceptLanguage,
+      pdfFilesToMerge,
     );
   }
 
