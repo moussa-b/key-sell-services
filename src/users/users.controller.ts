@@ -4,10 +4,12 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   NotFoundException,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -23,6 +25,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
+import { UserAccessConfiguration } from './entities/user-access.configuration';
+import { UserAccess } from './entities/user-access.entity';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -52,16 +56,50 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('access')
+  async getUserAccessConfiguration(
+    @Query('userId') userId: number,
+    @Headers('accept-language') acceptLanguage: string,
+  ): Promise<UserAccessConfiguration> {
+    if (!(+userId > 0)) {
+      throw new BadRequestException(`The userId ${userId} is not valid`);
+    }
+    const user = await this.usersService.findOne(+userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    return await this.usersService.getUserAccessConfiguration(
+      userId,
+      user.role,
+      acceptLanguage,
+    );
+  }
+
+  @Post('access')
+  async updateUserAccess(
+    @Query('userId') userId: number,
+    @Body() userAccess: UserAccess,
+  ): Promise<UserAccess> {
+    if (!(+userId > 0)) {
+      throw new BadRequestException(`The userId ${userId} is not valid`);
+    }
+    const user = await this.usersService.findOne(+userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    return await this.usersService.updateUserAccess(userId, userAccess);
+  }
+
   @ApiOperation({ summary: 'Retrieve a user by ID' })
   @ApiResponse({ status: 200, description: 'The user data.', type: User })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @Get(':userId')
   async findOne(@Param('userId') userId: string): Promise<User> {
-    const client = await this.usersService.findOne(+userId);
-    if (!client) {
+    const user = await this.usersService.findOne(+userId);
+    if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
-    return client;
+    return user;
   }
 
   @ApiOperation({ summary: 'Update a user' })

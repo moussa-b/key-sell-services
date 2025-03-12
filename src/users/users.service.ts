@@ -18,6 +18,13 @@ import { SendEmailDto } from '../shared/dto/send-email.dto';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { MailAudit } from '../shared/mail/entities/mail-audit.entity';
 import { I18nService } from 'nestjs-i18n';
+import { UserRole } from './entities/user-role.enum';
+import { UserAccess } from './entities/user-access.entity';
+import {
+  UserAccessConfiguration,
+  UserAccessGroup,
+} from './entities/user-access.configuration';
+import { LabelValue } from '../shared/dto/label-value.dto';
 
 @Injectable()
 export class UsersService {
@@ -200,5 +207,189 @@ export class UsersService {
       new MailAudit(sendEmailDto),
     );
     return { status: result !== false };
+  }
+
+  async getUserAccessConfiguration(
+    userId: number,
+    role: UserRole,
+    acceptLanguage: string,
+  ): Promise<UserAccessConfiguration> {
+    const userAccessConfiguration: UserAccessConfiguration =
+      await this.usersRepository.getUserAccessConfiguration(userId, true);
+    userAccessConfiguration.roleUserAccess = new UserAccess({ role });
+    if (!userAccessConfiguration.userAccess) {
+      userAccessConfiguration.userAccess = new UserAccess({ role });
+    }
+    const fieldsToRemove: string[] = [];
+    if (userAccessConfiguration.globalUserAccess) {
+      for (const key in userAccessConfiguration.globalUserAccess) {
+        if (userAccessConfiguration.globalUserAccess[key] === false) {
+          fieldsToRemove.push(key);
+        }
+      }
+    }
+    userAccessConfiguration.groups = this.getUserAccessGroups(
+      acceptLanguage,
+      fieldsToRemove,
+    );
+    delete userAccessConfiguration.globalUserAccess;
+    return userAccessConfiguration;
+  }
+
+  private getUserAccessGroups(
+    acceptLanguage: string,
+    fieldsToRemove: string[],
+  ): UserAccessGroup[] {
+    return [
+      {
+        label: this.i18nService.translate('user_access.real_estates_module', {
+          lang: acceptLanguage,
+        }),
+        fields: [
+          {
+            value: 'canShowRealEstate',
+            label: this.i18nService.translate(
+              'user_access.can_show_real_estate',
+              { lang: acceptLanguage },
+            ),
+          },
+          {
+            value: 'canEditRealEstate',
+            label: this.i18nService.translate(
+              'user_access.can_edit_real_estate',
+              { lang: acceptLanguage },
+            ),
+          },
+        ].filter(
+          (item: LabelValue<string>) => !fieldsToRemove.includes(item.value),
+        ),
+      },
+      {
+        label: this.i18nService.translate('user_access.sellers_module', {
+          lang: acceptLanguage,
+        }),
+        fields: [
+          {
+            value: 'canShowSellers',
+            label: this.i18nService.translate('user_access.can_show_sellers', {
+              lang: acceptLanguage,
+            }),
+          },
+          {
+            value: 'canEditSellers',
+            label: this.i18nService.translate('user_access.can_edit_sellers', {
+              lang: acceptLanguage,
+            }),
+          },
+        ].filter(
+          (item: LabelValue<string>) => !fieldsToRemove.includes(item.value),
+        ),
+      },
+      {
+        label: this.i18nService.translate('user_access.buyers_module', {
+          lang: acceptLanguage,
+        }),
+        fields: [
+          {
+            value: 'canShowBuyers',
+            label: this.i18nService.translate('user_access.can_show_buyers', {
+              lang: acceptLanguage,
+            }),
+          },
+          {
+            value: 'canEditBuyers',
+            label: this.i18nService.translate('user_access.can_edit_buyers', {
+              lang: acceptLanguage,
+            }),
+          },
+        ].filter(
+          (item: LabelValue<string>) => !fieldsToRemove.includes(item.value),
+        ),
+      },
+      {
+        label: this.i18nService.translate('user_access.calendar_module', {
+          lang: acceptLanguage,
+        }),
+        fields: [
+          {
+            value: 'canShowCalendarEvents',
+            label: this.i18nService.translate(
+              'user_access.can_show_calendar_events',
+              {
+                lang: acceptLanguage,
+              },
+            ),
+          },
+          {
+            value: 'canEditCalendarEvents',
+            label: this.i18nService.translate(
+              'user_access.can_edit_calendar_events',
+              {
+                lang: acceptLanguage,
+              },
+            ),
+          },
+        ].filter(
+          (item: LabelValue<string>) => !fieldsToRemove.includes(item.value),
+        ),
+      },
+      {
+        label: this.i18nService.translate('user_access.users_module', {
+          lang: acceptLanguage,
+        }),
+        fields: [
+          {
+            value: 'canShowUsers',
+            label: this.i18nService.translate('user_access.can_show_users', {
+              lang: acceptLanguage,
+            }),
+          },
+          {
+            value: 'canEditUsers',
+            label: this.i18nService.translate('user_access.can_edit_users', {
+              lang: acceptLanguage,
+            }),
+          },
+          {
+            value: 'canShowUsersAccess',
+            label: this.i18nService.translate(
+              'user_access.can_show_users_access',
+              { lang: acceptLanguage },
+            ),
+          },
+          {
+            value: 'canEditUsersAccess',
+            label: this.i18nService.translate(
+              'user_access.can_edit_users_access',
+              { lang: acceptLanguage },
+            ),
+          },
+        ].filter(
+          (item: LabelValue<string>) => !fieldsToRemove.includes(item.value),
+        ),
+      },
+      {
+        label: this.i18nService.translate('user_access.miscellaneous_module', {
+          lang: acceptLanguage,
+        }),
+        fields: [
+          {
+            value: 'canSendEmail',
+            label: this.i18nService.translate('user_access.can_send_email', {
+              lang: acceptLanguage,
+            }),
+          },
+        ].filter(
+          (item: LabelValue<string>) => !fieldsToRemove.includes(item.value),
+        ),
+      },
+    ].filter((group: UserAccessGroup) => group.fields.length > 0);
+  }
+
+  async updateUserAccess(
+    userId: number,
+    userAccess: UserAccess,
+  ): Promise<UserAccess> {
+    return this.usersRepository.updateUserAccess(userId, userAccess);
   }
 }

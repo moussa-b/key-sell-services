@@ -14,6 +14,7 @@ import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UpdateUserSecurityDto } from '../users/dto/update-user-security.dto';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { AccessToken } from './dto/access-token.dto';
+import { JwtPayload } from './dto/jwt-payload';
 
 @Injectable()
 export class AuthService {
@@ -24,10 +25,10 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmailOrUsername(email, true);
+    if (!user.isActive) {
+      throw new UnauthorizedException('Please verify your email first');
+    }
     if (user && (await bcrypt.compare(password, user.password))) {
-      if (!user.isActive) {
-        throw new UnauthorizedException('Please verify your email first');
-      }
       delete user.password;
       return user;
     }
@@ -35,11 +36,13 @@ export class AuthService {
   }
 
   login(user: User): AccessToken {
-    const payload = {
+    const payload: JwtPayload = {
       username: user.username,
-      sub: user.id,
+      id: user.id,
       role: user.role,
       userAccess: user.userAccess,
+      firstName: user.firstName,
+      lastName: user.lastName,
     };
     return {
       accessToken: this.jwtService.sign(payload),

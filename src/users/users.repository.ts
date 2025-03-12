@@ -7,28 +7,23 @@ import { UpdateUserSecurityDto } from './dto/update-user-security.dto';
 import { DatabaseService } from '../shared/db/database-service';
 import { DateUtils } from '../utils/date-utils';
 import { UserAccess } from './entities/user-access.entity';
+import { UserAccessConfiguration } from './entities/user-access.configuration';
 
 @Injectable()
 export class UsersRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  rowMapper(row: any, includePassword = false, includeUsername = false): User {
+  rowMapper(row: any): User {
     const user = new User();
     user.id = row['id'];
     user.uuid = row['uuid'];
-    if (includeUsername) {
-      user.username = row['username'];
-    }
     user.email = row['email'];
-    if (includePassword) {
-      user.password = row['password'];
-    }
     user.firstName = row['first_name'];
     user.lastName = row['last_name'];
     user.sex = row['sex'];
     user.preferredLanguage = row['preferred_language'];
     user.role = row['role'] || UserRole.USER;
-    user.isActive = row['is_active'];
+    user.isActive = row['is_active'] === 1;
     user.activationToken = row['activation_token'];
     user.resetPasswordToken = row['reset_password_token'];
     user.resetPasswordExpires = row['reset_password_expires'];
@@ -40,12 +35,6 @@ export class UsersRepository {
       row['updated_at'] instanceof Date
         ? row['updated_at']
         : DateUtils.createDateFromDatabaseDate(row['updated_at']);
-    if (row['userAccess']) {
-      user.userAccess = new UserAccess({
-        role: user.role,
-        ...row['userAccess'],
-      });
-    }
     return user;
   }
 
@@ -95,7 +84,16 @@ export class UsersRepository {
     return this.databaseService.get<User>(
       'SELECT * FROM users WHERE id = ?',
       [id],
-      (row) => this.rowMapper(row, includePassword, includeUsername),
+      (row) => {
+        const user = this.rowMapper(row);
+        if (includeUsername) {
+          user.username = row['username'];
+        }
+        if (includePassword) {
+          user.password = row['password'];
+        }
+        return user;
+      },
     );
   }
 
@@ -153,13 +151,28 @@ export class UsersRepository {
     let query;
     if (includeUserAccess) {
       query =
-        "SELECT u.*, JSON_OBJECTAGG(COALESCE(access, 'null_access'), active = 1) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE email = ? OR username = ? GROUP BY u.id";
+        "SELECT u.*, JSON_EXTRACT((SELECT c.property_value FROM configuration c WHERE c.category = 'standard' AND c.property_name = 'global_user_access'), '$') AS globalUserAccess, JSON_OBJECTAGG(COALESCE(ua.access, 'null_access'), JSON_MERGE_PATCH('{}', IF(ua.active = 1, 'true', 'false'))) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE email = ? OR username = ? GROUP BY u.id";
     } else {
       query = 'SELECT * FROM users WHERE email = ? OR username = ?';
     }
-    return this.databaseService.get<User>(query, [email, email], (row: any) =>
-      this.rowMapper(row, true),
-    );
+    return this.databaseService.get<User>(query, [email, email], (row: any) => {
+      const user = this.rowMapper(row);
+      user.password = row['password'];
+      if (row['userAccess']) {
+        user.userAccess = new UserAccess({
+          role: user.role,
+          ...row['userAccess'],
+        });
+        if (row['globalUserAccess']) {
+          for (const key in row['globalUserAccess']) {
+            if (row['globalUserAccess'][key] == false) {
+              user.userAccess[key] = false;
+            }
+          }
+        }
+      }
+      return user;
+    });
   }
 
   async findById(id: number): Promise<User> {
@@ -281,5 +294,54 @@ export class UsersRepository {
         })
         .catch((err) => reject(err));
     });
+  }
+
+  async getUserAccessConfiguration(
+    userId: number,
+    includeGlobalUserAccess: boolean,
+  ): Promise<UserAccessConfiguration> {
+    let query: string;
+    if (includeGlobalUserAccess) {
+      query =
+        'SELECT JSON_EXTRACT((SELECT c.property_value FROM configuration c WHERE c.category = "standard" AND c.property_name = "global_user_access"), "$") AS globalUserAccess, IF(COUNT(ua.user_id) > 0, JSON_OBJECTAGG(COALESCE(ua.access, "null_access"), JSON_MERGE_PATCH("{}", IF(ua.active = 1, "true", "false"))), NULL) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE u.id = ? GROUP BY u.id';
+    } else {
+      query =
+        'SELECT JSON_OBJECT() AS globalUserAccess, IF(COUNT(ua.user_id) > 0, JSON_OBJECTAGG(COALESCE(ua.access, "null_access"), JSON_MERGE_PATCH("{}", IF(ua.active = 1, "true", "false"))), NULL) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE u.id = ? GROUP BY u.id';
+    }
+    return this.databaseService.get<UserAccessConfiguration>(
+      query,
+      [userId],
+      (row: any) => {
+        const userAccessConfigurationDto = new UserAccessConfiguration();
+        if (row['userAccess']) {
+          userAccessConfigurationDto.userAccess = new UserAccess(
+            row['userAccess'],
+          );
+        }
+        userAccessConfigurationDto.globalUserAccess = new UserAccess(
+          row['globalUserAccess'],
+        );
+        return userAccessConfigurationDto;
+      },
+    );
+  }
+
+  async updateUserAccess(userId: number, userAccess: UserAccess) {
+    const insertUserAccess = `REPLACE
+    INTO users_access (user_id, access, active)`;
+    await this.databaseService.batchInsert(
+      insertUserAccess,
+      Object.keys(userAccess).map((key: string) => [
+        userId,
+        key,
+        userAccess[key] === true,
+      ]),
+    );
+
+    return this.databaseService.get<UserAccess>(
+      'SELECT JSON_OBJECTAGG(access, IF(active = 1, true, false)) AS userAccess FROM users_access WHERE user_id = ?',
+      [userId],
+      (row) => new UserAccess(row['userAccess']),
+    );
   }
 }

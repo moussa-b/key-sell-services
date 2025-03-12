@@ -1,0 +1,21 @@
+{
+  "users_module": "Users module",
+  "can_show_users": "Access to user list",
+  "can_edit_users": "Access to user edition",
+  "can_show_users_access": "Access to user authorizations",
+  "can_edit_users_access": "Access to edit user authorizations",
+  "real_estates_module": "Real estate module",
+  "can_show_real_estate": "Access to real estate list",
+  "can_edit_real_estate": "Access to real estate edition",
+  "sellers_module": "Sellers module",
+  "can_show_sellers": "Access to sellers list",
+  "can_edit_sellers": "Access to seller edition",
+  "buyers_module": "Buyers module",
+  "can_show_buyers": "Access to buyers list",
+  "can_edit_buyers": "Access to buyer edition",
+  "calendar_module": "Calendar module",
+  "can_show_calendar_events": "Calendar access",
+  "can_edit_calendar_events": "Access to edit an event in the calendar",
+  "miscellaneous_module": "Miscellaneous module",
+  "can_send_email": "Access to email sending"
+}

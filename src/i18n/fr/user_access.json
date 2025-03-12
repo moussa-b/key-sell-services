@@ -1,0 +1,21 @@
+{
+  "users_module": "Module des utilisateurs",
+  "can_show_users": "Accès à la liste des utilisateurs",
+  "can_edit_users": "Accès à l'édition d'un utilisateur",
+  "can_show_users_access": "Accès aux autorisations d'un utilisateur",
+  "can_edit_users_access": "Accès à l'édition des autorisations d'un utilisateur",
+  "real_estates_module": "Module des biens immobiliers",
+  "can_show_real_estate": "Accès à la liste des bien immobiliers",
+  "can_edit_real_estate": "Accès à l'édition d'un bien immobilier",
+  "sellers_module": "Module des vendeurs",
+  "can_show_sellers": "Accès à la liste des vendeurs",
+  "can_edit_sellers": "Accès à l'édition d'un vendeur",
+  "buyers_module": "Module des acheteurs",
+  "can_show_buyers": "Accès à la liste des acheteurs",
+  "can_edit_buyers": "Accès à l'édition d'un acheteur",
+  "calendar_module": "Module agenda",
+  "can_show_calendar_events": "Accès à l'agenda",
+  "can_edit_calendar_events": "Accès à l'édition d'un évènement dans l'agenda",
+  "miscellaneous_module": "Module divers",
+  "can_send_email": "Accès à l'envoi d'email"
+}
