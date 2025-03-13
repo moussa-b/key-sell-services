@@ -17,6 +17,7 @@ import { AddressesService } from './addresses.service';
 import { CommonController } from './common.controller';
 import { CommonService } from './common.service';
 import { PdfService } from './pdf/pdf.service';
+import { AppLoggerService } from './logger/app-logger.service';
 
 @Global()
 @Module({
@@ -56,6 +57,7 @@ import { PdfService } from './pdf/pdf.service';
     AddressesService,
     CommonService,
     PdfService,
+    AppLoggerService,
   ],
   exports: [
     DatabaseService,
@@ -65,6 +67,7 @@ import { PdfService } from './pdf/pdf.service';
     AddressesRepository,
     AddressesService,
     PdfService,
+    AppLoggerService,
   ],
   controllers: [CommonController],
 })

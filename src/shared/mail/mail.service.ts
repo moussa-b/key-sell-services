@@ -9,16 +9,18 @@ import { MailRepository } from './mail.repository';
 import { MailAudit } from './entities/mail-audit.entity';
 import { readFile } from 'fs-extra';
 import * as handlebars from 'handlebars';
+import { AppLoggerService } from '../logger/app-logger.service';
 
 @Injectable()
 export class MailService {
   private transporter: Transporter;
-  private readonly logger = new Logger(MailService.name);
+  private readonly className = MailService.name;
 
   constructor(
     private config: ConfigService,
     private readonly i18nService: I18nService,
     private readonly mailRepository: MailRepository,
+    private readonly logger: AppLoggerService,
   ) {
     if (
       this.config.get<string>('EMAIL_SMTP_HOST')?.length > 0 &&
@@ -90,7 +92,7 @@ export class MailService {
         info: { messageId: string; envelope: { from: string; to: string[] } },
       ) => {
         if (err) {
-          this.logger.error(err.message);
+          this.logger.error(err.message, this.className);
         }
         const envelope: { from: string; to: string[] } = info.envelope;
         if (info.envelope) {
@@ -128,7 +130,7 @@ export class MailService {
       const template = handlebars.compile(source);
       return template(context);
     } catch (e) {
-      this.logger.error(e.message);
+      this.logger.error(e.message, this.className);
     }
     return undefined;
   }
@@ -141,7 +143,10 @@ export class MailService {
       await this.transporter.verify();
       return true;
     } catch (error) {
-      this.logger.log('Mailer check failed with error : ', error);
+      this.logger.log(
+        `Mailer check failed with error : ${error}`,
+        this.className,
+      );
       return false;
     }
   }

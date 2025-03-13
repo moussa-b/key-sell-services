@@ -15,6 +15,7 @@ export class MysqlService
 {
   private pool?: Pool;
   private readonly logger = new Logger(MysqlService.name);
+  private readonly className = MysqlService.name;
 
   constructor(private readonly configService: ConfigService) {
     super();
@@ -145,7 +146,10 @@ export class MysqlService
       this.logger.log('MySQL Database connected successfully');
       connection.release();
     } catch (error) {
-      this.logger.error('Error connecting to MySQL:', error.message);
+      this.logger.error(
+        `Error connecting to MySQL: ${error.message}`,
+        this.className,
+      );
       throw error;
     }
   }
@@ -162,7 +166,10 @@ export class MysqlService
       const [rows] = await this.pool.query<any[]>(queryText, params);
       return rows;
     } catch (error) {
-      this.logger.error('Database query error:', error.message);
+      this.logger.error(
+        `Database query error: ${error.message}`,
+        this.className,
+      );
       throw error;
     }
   }
@@ -179,7 +186,7 @@ export class MysqlService
       return result;
     } catch (error) {
       await connection.rollback();
-      this.logger.error('Transaction error:', error.message);
+      this.logger.error(`Transaction error: ${error.message}`, this.className);
       throw error;
     } finally {
       connection.release();

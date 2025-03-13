@@ -9,3 +9,5 @@ uploads
 .env.production.local
 .env.local
 .env.minimal.local
+logs
+*.log

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { RealEstateDto } from './dto/real-estate.dto';
 import { RealEstatesRepository } from './real-estates.repository';
 import { LabelValue } from '../shared/dto/label-value.dto';
@@ -10,6 +10,7 @@ import { MediaType } from '../medias/entities/media-type.enum';
 import { MediasService } from '../medias/medias.service';
 import * as path from 'path';
 import { PdfService } from '../shared/pdf/pdf.service';
+import { AppLoggerService } from '../shared/logger/app-logger.service';
 
 @Injectable()
 export class RealEstatesService {
@@ -19,8 +20,7 @@ export class RealEstatesService {
   public static pictureMaxCount = 10;
   public static videoMaxCount = 1;
   public static documentMaxCount = 5;
-
-  private readonly logger = new Logger(RealEstatesService.name);
+  private readonly className = RealEstatesService.name;
 
   constructor(
     private readonly realEstateRepository: RealEstatesRepository,
@@ -28,6 +28,7 @@ export class RealEstatesService {
     private readonly i18nService: I18nService,
     private readonly mediasService: MediasService,
     private readonly pdfService: PdfService,
+    private readonly logger: AppLoggerService,
   ) {}
 
   async create(createRealEstateDto: RealEstateDto): Promise<RealEstateDto> {
@@ -126,7 +127,10 @@ export class RealEstatesService {
       for (const file of files) {
         unlink(file.path, (err) => {
           if (err) {
-            this.logger.error(`Failed to delete file: ${file.path}`, err);
+            this.logger.error(
+              `Failed to delete file: ${file.path} ${err.message}`,
+              this.className,
+            );
           }
         });
       }
@@ -164,7 +168,10 @@ export class RealEstatesService {
     const result = await this.mediasService.remove(media.id);
     unlink(media.absolutePath, (err) => {
       if (err) {
-        this.logger.error(`Failed to delete file: ${media.absolutePath}`, err);
+        this.logger.error(
+          `Failed to delete file: ${media.absolutePath} ${err.message}`,
+          this.className,
+        );
       }
     });
     this.removeFolderIfEmpty(path.dirname(media.absolutePath));
@@ -178,7 +185,10 @@ export class RealEstatesService {
         rmdirSync(folderPath); // Remove the empty folder
       }
     } catch (err) {
-      this.logger.error(`Failed to delete folder: ${folderPath}`, err);
+      this.logger.error(
+        `Failed to delete folder: ${folderPath} ${err.message}`,
+        this.className,
+      );
     }
   }
 
