@@ -11,3 +11,4 @@ uploads
 .env.minimal.local
 logs
 *.log
+vps
