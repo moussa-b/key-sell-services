@@ -1,10 +1,19 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { User } from '../../users/entities/user.entity';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly i18nService: I18nService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const permissions = this.reflector.getAllAndOverride<string[]>(
@@ -14,12 +23,23 @@ export class PermissionsGuard implements CanActivate {
     if (!permissions) {
       return true;
     }
-    const { user }: { user: User } = context.switchToHttp().getRequest();
+    const { user, headers }: { user: User; headers: any } = context
+      .switchToHttp()
+      .getRequest();
+    let permissionGranted = false;
     for (const permission of permissions) {
       if (user.userAccess && user.userAccess[permission]) {
-        return true;
+        permissionGranted = true;
       }
     }
-    return false;
+
+    if (!permissionGranted) {
+      throw new UnauthorizedException(
+        this.i18nService.translate('common.missing_permission', {
+          lang: headers['accept-language'] || 'fr',
+        }) + ` [${permissions.join(', ')}]`,
+      );
+    }
+    return true;
   }
 }

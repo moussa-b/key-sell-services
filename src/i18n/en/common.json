@@ -21,5 +21,6 @@
   "yes": "Yes",
   "no": "No",
   "not_specified": "Not specified",
-  "photos": "Pictures"
+  "photos": "Pictures",
+  "missing_permission": "Access denied. You do not have the necessary authorizations to access this resource."
 }

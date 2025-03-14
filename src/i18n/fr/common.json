@@ -21,5 +21,6 @@
   "yes": "Oui",
   "no": "Non",
   "not_specified": "Non renseigné",
-  "photos": "Photos"
+  "photos": "Photos",
+  "missing_permission": "Accès refusé. Vous n'avez pas les autorisations nécessaires pour accéder à cette ressource."
 }
