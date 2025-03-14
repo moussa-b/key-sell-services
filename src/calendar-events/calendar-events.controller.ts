@@ -18,9 +18,11 @@ import { CalendarEvent } from './entities/calendar-event.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Calendar Events')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('calendar-events')
 export class CalendarEventsController {
   constructor(private readonly calendarEventsService: CalendarEventsService) {}
@@ -32,6 +34,7 @@ export class CalendarEventsController {
     type: CalendarEvent,
   })
   @Post()
+  @Permissions('canEditCalendarEvents')
   create(
     @Body() createCalendarEventDto: CreateCalendarEventDto,
     @CurrentUser() user: ConnectedUser,
@@ -47,6 +50,7 @@ export class CalendarEventsController {
     type: [CalendarEvent],
   })
   @Get()
+  @Permissions('canShowCalendarEvents')
   findAll(): Promise<CalendarEvent[]> {
     return this.calendarEventsService.findAll();
   }
@@ -59,6 +63,7 @@ export class CalendarEventsController {
   })
   @ApiResponse({ status: 404, description: 'Calendar event not found.' })
   @Get(':id')
+  @Permissions('canShowCalendarEvents')
   async findOne(@Param('id') id: string): Promise<CalendarEvent> {
     const calendarEvent = await this.calendarEventsService.findOne(+id);
     if (!calendarEvent) {
@@ -75,6 +80,7 @@ export class CalendarEventsController {
   })
   @ApiResponse({ status: 404, description: 'Calendar event not found.' })
   @Patch(':id')
+  @Permissions('canEditCalendarEvents')
   async update(
     @Param('id') id: string,
     @Body() updateCalendarEventDto: UpdateCalendarEventDto,
@@ -95,6 +101,7 @@ export class CalendarEventsController {
     type: ResponseStatus,
   })
   @Delete(':id')
+  @Permissions('canEditCalendarEvents')
   async remove(@Param('id') id: string): Promise<ResponseStatus> {
     const calendarEvent = await this.calendarEventsService.findOne(+id);
     if (!calendarEvent) {

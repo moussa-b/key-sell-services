@@ -13,19 +13,18 @@ import { BuyersService } from './buyers.service';
 import { CreateBuyerDto } from './dto/create-buyer.dto';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user-role.enum';
 import { Buyer } from './entities/buyer.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Buyers')
 @Controller('buyers')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}
 
@@ -36,7 +35,7 @@ export class BuyersController {
     type: Buyer,
   })
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditBuyers')
   create(
     @Body() createBuyerDto: CreateBuyerDto,
     @CurrentUser() user: ConnectedUser,
@@ -52,6 +51,7 @@ export class BuyersController {
     type: [Buyer],
   })
   @Get()
+  @Permissions('canShowBuyers')
   findAll(): Promise<Buyer[]> {
     return this.buyersService.findAll();
   }
@@ -67,6 +67,7 @@ export class BuyersController {
     description: 'Buyer not found.',
   })
   @Get(':buyerId')
+  @Permissions('canShowBuyers')
   async findOne(@Param('buyerId') buyerId: string): Promise<Buyer> {
     const buyer = await this.buyersService.findOne(+buyerId);
     if (!buyer) {
@@ -83,7 +84,7 @@ export class BuyersController {
   })
   @ApiResponse({ status: 404, description: 'Buyer not found.' })
   @Patch(':buyerId')
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditBuyers')
   async update(
     @Param('buyerId') buyerId: string,
     @Body() updateBuyerDto: UpdateBuyerDto,
@@ -105,7 +106,7 @@ export class BuyersController {
   })
   @ApiResponse({ status: 404, description: 'Buyer not found.' })
   @Delete(':buyerId')
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditBuyers')
   async remove(@Param('buyerId') buyerId: string): Promise<ResponseStatus> {
     const buyer = await this.buyersService.findOne(+buyerId);
     if (!buyer) {
@@ -124,7 +125,7 @@ export class BuyersController {
   })
   @ApiResponse({ status: 404, description: 'Buyer not found.' })
   @Post(':buyerId/email/sent')
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Permissions('canSendEmail')
   async sendEmail(
     @Param('buyerId') buyerId: string,
     @Body() sendEmailDto: SendEmailDto,

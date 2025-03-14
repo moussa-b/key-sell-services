@@ -13,19 +13,18 @@ import { SellersService } from './sellers.service';
 import { CreateSellerDto } from './dto/create-seller.dto';
 import { UpdateSellerDto } from './dto/update-seller.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user-role.enum';
 import { Seller } from './entities/seller.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
+import { Permissions } from '../auth/decorators/permissions.decorator';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @ApiTags('Sellers')
 @Controller('sellers')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class SellersController {
   constructor(private readonly sellersService: SellersService) {}
 
@@ -36,7 +35,7 @@ export class SellersController {
     type: Seller,
   })
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditSellers')
   create(
     @Body() createSellerDto: CreateSellerDto,
     @CurrentUser() user: ConnectedUser,
@@ -52,6 +51,7 @@ export class SellersController {
     type: [Seller],
   })
   @Get()
+  @Permissions('canShowSellers')
   findAll(): Promise<Seller[]> {
     return this.sellersService.findAll();
   }
@@ -67,6 +67,7 @@ export class SellersController {
     description: 'Seller not found.',
   })
   @Get(':sellerId')
+  @Permissions('canShowSellers')
   async findOne(@Param('sellerId') sellerId: string): Promise<Seller> {
     const seller = await this.sellersService.findOne(+sellerId);
     if (!seller) {
@@ -83,7 +84,7 @@ export class SellersController {
   })
   @ApiResponse({ status: 404, description: 'Seller not found.' })
   @Patch(':sellerId')
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditSellers')
   async update(
     @Param('sellerId') sellerId: string,
     @Body() updateSellerDto: UpdateSellerDto,
@@ -105,7 +106,7 @@ export class SellersController {
   })
   @ApiResponse({ status: 404, description: 'Seller not found.' })
   @Delete(':sellerId')
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditSellers')
   async remove(@Param('sellerId') sellerId: string): Promise<ResponseStatus> {
     const seller = await this.sellersService.findOne(+sellerId);
     if (!seller) {
@@ -124,7 +125,7 @@ export class SellersController {
   })
   @ApiResponse({ status: 404, description: 'Seller not found.' })
   @Post(':sellerId/email/sent')
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Permissions('canSendEmail')
   async sendEmail(
     @Param('sellerId') sellerId: string,
     @Body() sendEmailDto: SendEmailDto,

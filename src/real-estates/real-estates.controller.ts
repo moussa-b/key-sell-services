@@ -32,6 +32,8 @@ import { existsSync, mkdirSync } from 'fs-extra';
 import { Media } from '../medias/entities/media.entity';
 import { MediasService } from '../medias/medias.service';
 import { MediaType } from '../medias/entities/media-type.enum';
+import { Permissions } from '../auth/decorators/permissions.decorator';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 const getFilename = (
   req: Request,
@@ -75,7 +77,7 @@ const getDestination = (
 };
 
 @Controller('real-estates')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class RealEstatesController {
   constructor(
     private readonly realEstateService: RealEstatesService,
@@ -83,6 +85,7 @@ export class RealEstatesController {
   ) {}
 
   @Post()
+  @Permissions('canEditRealEstate')
   create(
     @Body() createRealEstateDto: RealEstateDto,
     @CurrentUser() user: ConnectedUser,
@@ -92,21 +95,25 @@ export class RealEstatesController {
   }
 
   @Get()
+  @Permissions('canShowRealEstate')
   findAll(): Promise<RealEstateDto[]> {
     return this.realEstateService.findAll();
   }
 
   @Get('owners') // must come before @Get(':id')
+  @Permissions('canShowRealEstate')
   findAllOwners(): Promise<LabelValue<number>[]> {
     return this.realEstateService.findAllOwners();
   }
 
   @Get(':id')
+  @Permissions('canShowRealEstate')
   findOne(@Param('id') realEstateId: string): Promise<RealEstateDto> {
     return this.realEstateService.findOne(+realEstateId);
   }
 
   @Patch(':id')
+  @Permissions('canEditRealEstate')
   update(
     @Param('id') realEstateId: string,
     @Body() updateRealEstateDto: RealEstateDto,
@@ -115,6 +122,7 @@ export class RealEstatesController {
   }
 
   @Delete(':id')
+  @Permissions('canEditRealEstate')
   async remove(@Param('id') realEstateId: string): Promise<ResponseStatus> {
     const realEstate = await this.realEstateService.findOne(+realEstateId);
     if (!realEstate) {
@@ -143,6 +151,7 @@ export class RealEstatesController {
       }),
     }),
   )
+  @Permissions('canEditRealEstate')
   async uploadPictures(
     @UploadedFiles(
       new ParseFilePipe({
@@ -181,6 +190,7 @@ export class RealEstatesController {
       }),
     }),
   )
+  @Permissions('canEditRealEstate')
   async uploadVideos(
     @UploadedFiles(
       new ParseFilePipe({
@@ -219,6 +229,7 @@ export class RealEstatesController {
       }),
     }),
   )
+  @Permissions('canEditRealEstate')
   async uploadDocuments(
     @UploadedFiles(
       new ParseFilePipe({
@@ -247,6 +258,7 @@ export class RealEstatesController {
   @Delete(':id/pictures/:uuid')
   @Delete(':id/videos/:uuid')
   @Delete(':id/documents/:uuid')
+  @Permissions('canEditRealEstate')
   async removePicture(
     @Param('id') realEstateId: string,
     @Param('uuid') mediaUuid: string,

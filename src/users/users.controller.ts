@@ -15,9 +15,6 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from './entities/user-role.enum';
 import { User } from './entities/user.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -27,9 +24,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
 import { UserAccessConfiguration } from './entities/user-access.configuration';
 import { UserAccess } from './entities/user-access.entity';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -40,7 +39,7 @@ export class UsersController {
     type: User,
   })
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditUsers')
   create(
     @Body() createUserDto: CreateUserDto,
     @CurrentUser() user: ConnectedUser,
@@ -52,11 +51,13 @@ export class UsersController {
   @ApiOperation({ summary: 'Retrieve a list of all users' })
   @ApiResponse({ status: 200, description: 'A list of users.', type: [User] })
   @Get()
+  @Permissions('canShowUsers')
   findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
 
   @Get('access')
+  @Permissions('canShowUsersAccess')
   async getUserAccessConfiguration(
     @Query('userId') userId: number,
     @Headers('accept-language') acceptLanguage: string,
@@ -76,6 +77,7 @@ export class UsersController {
   }
 
   @Post('access')
+  @Permissions('canEditUsersAccess')
   async updateUserAccess(
     @Query('userId') userId: number,
     @Body() userAccess: UserAccess,
@@ -94,6 +96,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'The user data.', type: User })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @Get(':userId')
+  @Permissions('canShowUsers')
   async findOne(@Param('userId') userId: string): Promise<User> {
     const user = await this.usersService.findOne(+userId);
     if (!user) {
@@ -110,7 +113,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @Patch(':userId')
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditUsers')
   update(
     @Param('userId') userId: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -128,7 +131,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @Delete(':userId')
-  @Roles(UserRole.ADMIN)
+  @Permissions('canEditUsers')
   async remove(@Param('userId') userId: string): Promise<ResponseStatus> {
     if (+userId === 1) {
       throw new BadRequestException(
@@ -150,7 +153,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @Post(':userId/email/sent')
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Permissions('canSendEmail')
   async sendEmail(
     @Param('userId') userId: string,
     @Body() sendEmailDto: SendEmailDto,
