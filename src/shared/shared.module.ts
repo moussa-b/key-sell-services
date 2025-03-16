@@ -18,6 +18,7 @@ import { CommonController } from './common.controller';
 import { CommonService } from './common.service';
 import { PdfService } from './pdf/pdf.service';
 import { AppLoggerService } from './logger/app-logger.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Global()
 @Module({
@@ -37,6 +38,7 @@ import { AppLoggerService } from './logger/app-logger.service';
       },
       resolvers: [AcceptLanguageResolver],
     }),
+    HttpModule,
   ],
   providers: [
     {

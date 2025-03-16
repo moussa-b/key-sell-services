@@ -2,17 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { readFile } from 'fs-extra';
 import * as Handlebars from 'handlebars';
 import handlebars from 'handlebars';
-import puppeteer from 'puppeteer';
 import * as path from 'path';
 import { I18nService } from 'nestjs-i18n';
 import { RealEstateType } from '../../real-estates/entities/real-estate-type.enum';
 import { Address } from '../models/address.entity';
 import { LabelValue } from '../dto/label-value.dto';
 import { PDFDocument } from 'pdf-lib';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PdfService {
-  constructor(private readonly i18nService: I18nService) {
+  constructor(
+    private readonly i18nService: I18nService,
+    private readonly httpService: HttpService,
+    private readonly config: ConfigService,
+  ) {
     handlebars.registerHelper(
       'formatRealEstateType',
       (type: RealEstateType, options: any) => {
@@ -102,11 +108,7 @@ export class PdfService {
     const template = Handlebars.compile(templateHtml);
     const fontPath = path.join(__dirname, '..', 'fonts', 'Roboto-Regular.ttf');
     const html = template({ ...context, fontPath, lang: acceptLanguage });
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdfBuffer = await page.pdf({ format: 'A4' });
-    await browser.close();
+    const pdfBuffer = await this.generatePdfWitPuppteer(html);
     const buffer = Buffer.from(pdfBuffer);
     if (pdfFilesToMerge?.length > 0) {
       const pdfBuffers: Buffer[] = [buffer];
@@ -128,5 +130,16 @@ export class PdfService {
     } else {
       return buffer;
     }
+  }
+
+  async generatePdfWitPuppteer(html: string): Promise<Buffer> {
+    const response = await firstValueFrom(
+      this.httpService.post(
+        `${this.config.get<string>('WKHTMLTOPDF_SERVICE_URL', 'http://localhost:3001')}/generate-pdf`,
+        { html },
+        { responseType: 'arraybuffer' },
+      ),
+    );
+    return Buffer.from(response.data);
   }
 }

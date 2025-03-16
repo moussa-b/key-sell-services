@@ -297,10 +297,11 @@ export class RealEstatesController {
       realEstate,
       acceptLanguage,
     );
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${DateUtils.formatToFileName(new Date())}_export_${realEstateId}.pdf"`,
-    });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${DateUtils.formatToFileName(new Date())}_export_${realEstateId}.pdf"`,
+    );
     res.send(pdfBuffer);
   }
 }
