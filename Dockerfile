@@ -1,11 +1,11 @@
 # https://www.tomray.dev/nestjs-docker-production
 # https://docs.nestjs.com/deployment#dockerizing-your-application
 
-# Use the official Node.js Alpine image as the base image
-FROM node:current-alpine
+# Use the official Node.js image as the base image
+FROM node:current-slim
 
 # Install dependencies
-RUN apk add --no-cache wkhtmltopdf && rm -rf /var/cache/apk/*
+RUN apt-get update && apt-get install -y wkhtmltopdf && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
