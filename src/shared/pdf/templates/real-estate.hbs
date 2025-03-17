@@ -19,9 +19,21 @@
          }
 
         .grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          display: flex;
+          flex-wrap: wrap;
           gap: 1rem;
+        }
+
+        .grid > * {
+          width: calc(50% - 2rem);
+        }
+
+        .grid > *:nth-child(odd) {
+          padding-right: 1rem;
+        }
+
+        .grid > *:nth-child(n+3) {
+          padding-top: 1rem;
         }
 
         .font-bold {
@@ -55,7 +67,7 @@
 </head>
 <body>
   <h2>{{i18n 'real_estate.real_estate_detail' lang=lang}}</h2>
-  <div class="grid grid-cols-2 gap-4">
+  <div class="grid">
     <div>
       <strong class="font-bold text-gray-700">{{i18n 'real_estate.type' lang=lang}}</strong> : <span class="font-bold">{{formatRealEstateType type lang=lang}}</span>
     </div>
@@ -99,9 +111,9 @@
   {{#if pictures.length}}
     <div class="page-break"></div>
     <h2>{{i18n 'common.photos' lang=lang}}</h2>
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid">
       {{#each pictures}}
-        <img src="{{this}}" alt="Logo" style="width: 100%;">
+        <img src="{{this}}" alt="Logo">
       {{/each}}
     </div>
   {{/if}}
