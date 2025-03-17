@@ -7,6 +7,7 @@ import {
 import { createPool, Pool, PoolConnection } from 'mysql2/promise';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseService } from './database-service';
+import { AppLoggerService } from '../logger/app-logger.service';
 
 @Injectable()
 export class MysqlService
@@ -14,10 +15,12 @@ export class MysqlService
   implements OnModuleInit, OnModuleDestroy
 {
   private pool?: Pool;
-  private readonly logger = new Logger(MysqlService.name);
   private readonly className = MysqlService.name;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly logger: AppLoggerService,
+  ) {
     super();
     if (this.configService.get<string>('DATABASE_URL')?.includes('mysql')) {
       this.pool = createPool({
@@ -143,7 +146,7 @@ export class MysqlService
     }
     try {
       const connection = await this.pool.getConnection();
-      this.logger.log('MySQL Database connected successfully');
+      this.logger.log('MySQL Database connected successfully', this.className);
       connection.release();
     } catch (error) {
       this.logger.error(
@@ -157,7 +160,7 @@ export class MysqlService
   // Lifecycle hook to clean up the pool on module destruction
   async onModuleDestroy() {
     await this.pool.end();
-    this.logger.log('MySQL Database connection closed');
+    this.logger.log('MySQL Database connection closed', this.className);
   }
 
   // Generic query method

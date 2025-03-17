@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { readFile } from 'fs-extra';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { pathExists, readFile, writeFileSync } from 'fs-extra';
 import * as Handlebars from 'handlebars';
 import handlebars from 'handlebars';
 import * as path from 'path';
@@ -11,13 +11,19 @@ import { PDFDocument } from 'pdf-lib';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
+import { AppLoggerService } from '../logger/app-logger.service';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 @Injectable()
 export class PdfService {
+  private readonly className = PdfService.name;
+
   constructor(
     private readonly i18nService: I18nService,
     private readonly httpService: HttpService,
     private readonly config: ConfigService,
+    private readonly logger: AppLoggerService,
   ) {
     handlebars.registerHelper(
       'formatRealEstateType',
@@ -108,7 +114,7 @@ export class PdfService {
     const template = Handlebars.compile(templateHtml);
     const fontPath = path.join(__dirname, '..', 'fonts', 'Roboto-Regular.ttf');
     const html = template({ ...context, fontPath, lang: acceptLanguage });
-    const pdfBuffer = await this.generatePdfWitPuppteer(html);
+    const pdfBuffer = await this.generatePdfWithWkHtmlToPdf(html);
     const buffer = Buffer.from(pdfBuffer);
     if (pdfFilesToMerge?.length > 0) {
       const pdfBuffers: Buffer[] = [buffer];
@@ -132,14 +138,55 @@ export class PdfService {
     }
   }
 
-  async generatePdfWitPuppteer(html: string): Promise<Buffer> {
-    const response = await firstValueFrom(
-      this.httpService.post(
-        `${this.config.get<string>('WKHTMLTOPDF_SERVICE_URL', 'http://localhost:3001')}/generate-pdf`,
-        { html },
-        { responseType: 'arraybuffer' },
-      ),
+  async generatePdfWithWkHtmlToPdf(html: string): Promise<Buffer> {
+    if (!html) {
+      throw new HttpException(
+        'PDF generation failed. HTML is required',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    const wkhtmlToPdfServiceUrl = this.config.get<string>(
+      'WKHTMLTOPDF_SERVICE_URL',
+      '',
     );
-    return Buffer.from(response.data);
+    if (wkhtmlToPdfServiceUrl.length > 0) {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `${wkhtmlToPdfServiceUrl}/generate-pdf`,
+          { html },
+          { responseType: 'arraybuffer' },
+        ),
+      );
+      return Buffer.from(response.data);
+    } else {
+      const execAsync = promisify(exec);
+      try {
+        const { stdout } = await execAsync('wkhtmltopdf --version');
+        this.logger.log(
+          `wkhtmltopdf is installed. Version: ${stdout.trim()}`,
+          this.className,
+        );
+      } catch (e) {
+        this.logger.error(`wkhtmltopdf is not installed`, this.className);
+        this.logger.error(e.message, this.className);
+        throw new HttpException(
+          'PDF generation is not supported',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      const tempPath = this.config.get<string>('TEMP_PATH', '/var/tmp');
+      const htmlFilePath = path.join(tempPath, 'temp.html');
+      const pdfFilePath = path.join(tempPath, 'output.pdf');
+      writeFileSync(htmlFilePath, html);
+      await execAsync(`wkhtmltopdf ${htmlFilePath} ${pdfFilePath}`);
+      if (pathExists(pdfFilePath)) {
+        return await readFile(pdfFilePath);
+      } else {
+        throw new HttpException(
+          'PDF generation failed',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
   }
 }

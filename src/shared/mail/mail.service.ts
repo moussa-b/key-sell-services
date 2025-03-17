@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import * as hbs from 'nodemailer-express-handlebars'; //does not use latest version 7.0.0 because of error with require when building Docker

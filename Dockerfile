@@ -2,7 +2,10 @@
 # https://docs.nestjs.com/deployment#dockerizing-your-application
 
 # Use the official Node.js image as the base image
-FROM node:20-alpine
+FROM node:current-slim
+
+# Install dependencies
+RUN apt-get update && apt-get install -y wkhtmltopdf && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
