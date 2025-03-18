@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as basicAuth from 'express-basic-auth';
 import { KnexService } from './shared/db/knex.service';
+import { AppLoggerService } from './shared/logger/app-logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,14 +14,21 @@ async function bootstrap() {
 
   // CORS config
   const configService = app.get(ConfigService);
+  const loggerService = app.get(AppLoggerService);
   const corsOrigins = configService
     .get<string>('CORS_ORIGINS', '')
     .split(',')
-    .map((origin) => origin.trim());
+    .map((origin: string) => origin.trim())
+    .filter((origin: string) => origin.length > 0);
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Accept',
   });
+  if (corsOrigins.length > 0) {
+    loggerService.log(`CORS enabled for ${corsOrigins.join(', ')}`);
+  }
 
   // Initialize KnexService and run migrations before app starts
   const knexService = app.get(KnexService);
