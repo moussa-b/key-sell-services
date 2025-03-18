@@ -24,7 +24,7 @@ async function bootstrap() {
     origin: corsOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Accept',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
   if (corsOrigins.length > 0) {
     loggerService.log(`CORS enabled for ${corsOrigins.join(', ')}`);
