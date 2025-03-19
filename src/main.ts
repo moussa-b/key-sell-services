@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './shared/transform/transform.interceptor';
 import { ConfigService } from '@nestjs/config';
-import * as basicAuth from 'express-basic-auth';
 import { KnexService } from './shared/db/knex.service';
 import { AppLoggerService } from './shared/logger/app-logger.service';
 
