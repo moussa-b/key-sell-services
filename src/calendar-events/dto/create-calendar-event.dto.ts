@@ -1,5 +1,4 @@
 import { CalendarEventStatus } from '../entities/calendar-event-status.enum';
-import { ApiProperty } from '@nestjs/swagger';
 import { RepetitionOptions } from './repetition-option';
 import { IsNotEmpty, IsString, Matches } from 'class-validator';
 
@@ -39,15 +38,6 @@ export class CreateCalendarEventDto {
   })
   endHour: string;
 
-  @ApiProperty({
-    enum: [
-      'WAITING_FOR_CONFIRMATION',
-      'CONFIRMED',
-      'FINISHED',
-      'CANCELLED',
-      'MISSED',
-    ],
-  })
   status?: CalendarEventStatus;
 
   reminder?: number;

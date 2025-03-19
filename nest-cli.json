@@ -24,7 +24,7 @@
         "watchAssets": true
       }
     ],
-    "plugins": ["@nestjs/swagger"]
+    "plugins": []
   },
   "generateOptions": {
     "spec": false

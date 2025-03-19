@@ -15,25 +15,17 @@ import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Buyer } from './entities/buyer.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 
-@ApiTags('Buyers')
 @Controller('buyers')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}
 
-  @ApiOperation({ summary: 'Create a new buyer' })
-  @ApiResponse({
-    status: 201,
-    description: 'The buyer has been successfully created.',
-    type: Buyer,
-  })
   @Post()
   @Permissions('canEditBuyers')
   create(
@@ -44,28 +36,12 @@ export class BuyersController {
     return this.buyersService.create(createBuyerDto);
   }
 
-  @ApiOperation({ summary: 'Retrieve a list of all buyers' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of all buyers.',
-    type: [Buyer],
-  })
   @Get()
   @Permissions('canShowBuyers')
   findAll(): Promise<Buyer[]> {
     return this.buyersService.findAll();
   }
 
-  @ApiOperation({ summary: 'Retrieve a buyer by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The buyer with the given ID.',
-    type: Buyer,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Buyer not found.',
-  })
   @Get(':buyerId')
   @Permissions('canShowBuyers')
   async findOne(@Param('buyerId') buyerId: string): Promise<Buyer> {
@@ -76,13 +52,6 @@ export class BuyersController {
     return buyer;
   }
 
-  @ApiOperation({ summary: 'Update a buyer' })
-  @ApiResponse({
-    status: 200,
-    description: 'The buyer has been successfully updated.',
-    type: Buyer,
-  })
-  @ApiResponse({ status: 404, description: 'Buyer not found.' })
   @Patch(':buyerId')
   @Permissions('canEditBuyers')
   async update(
@@ -98,13 +67,6 @@ export class BuyersController {
     return this.buyersService.update(+buyerId, updateBuyerDto);
   }
 
-  @ApiOperation({ summary: 'Delete a buyer by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The buyer has been successfully deleted.',
-    type: ResponseStatus,
-  })
-  @ApiResponse({ status: 404, description: 'Buyer not found.' })
   @Delete(':buyerId')
   @Permissions('canEditBuyers')
   async remove(@Param('buyerId') buyerId: string): Promise<ResponseStatus> {
@@ -117,13 +79,6 @@ export class BuyersController {
     };
   }
 
-  @ApiOperation({ summary: 'Send email to a buyer' })
-  @ApiResponse({
-    status: 200,
-    description: 'The email has been successfully sent to the buyer.',
-    type: ResponseStatus,
-  })
-  @ApiResponse({ status: 404, description: 'Buyer not found.' })
   @Post(':buyerId/email/sent')
   @Permissions('canSendEmail')
   async sendEmail(

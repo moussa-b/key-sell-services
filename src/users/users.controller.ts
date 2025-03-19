@@ -17,7 +17,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from './entities/user.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ConnectedUser } from '../shared/models/current-user';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -32,12 +31,6 @@ import { Permissions } from '../auth/decorators/permissions.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({
-    status: 201,
-    description: 'The user has been successfully created.',
-    type: User,
-  })
   @Post()
   @Permissions('canEditUsers')
   create(
@@ -48,8 +41,6 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @ApiOperation({ summary: 'Retrieve a list of all users' })
-  @ApiResponse({ status: 200, description: 'A list of users.', type: [User] })
   @Get()
   @Permissions('canShowUsers')
   findAll(): Promise<User[]> {
@@ -92,9 +83,6 @@ export class UsersController {
     return await this.usersService.updateUserAccess(userId, userAccess);
   }
 
-  @ApiOperation({ summary: 'Retrieve a user by ID' })
-  @ApiResponse({ status: 200, description: 'The user data.', type: User })
-  @ApiResponse({ status: 404, description: 'User not found.' })
   @Get(':userId')
   @Permissions('canShowUsers')
   async findOne(@Param('userId') userId: string): Promise<User> {
@@ -105,13 +93,6 @@ export class UsersController {
     return user;
   }
 
-  @ApiOperation({ summary: 'Update a user' })
-  @ApiResponse({
-    status: 200,
-    description: 'The user has been successfully updated',
-    type: User,
-  })
-  @ApiResponse({ status: 404, description: 'User not found.' })
   @Patch(':userId')
   @Permissions('canEditUsers')
   update(
@@ -123,13 +104,6 @@ export class UsersController {
     return this.usersService.update(+userId, updateUserDto);
   }
 
-  @ApiOperation({ summary: 'Delete a user by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The user has been successfully deleted.',
-    type: ResponseStatus,
-  })
-  @ApiResponse({ status: 404, description: 'User not found.' })
   @Delete(':userId')
   @Permissions('canEditUsers')
   async remove(@Param('userId') userId: string): Promise<ResponseStatus> {
@@ -145,13 +119,6 @@ export class UsersController {
     return { status: await this.usersService.remove(+userId) };
   }
 
-  @ApiOperation({ summary: 'Send email to a user' })
-  @ApiResponse({
-    status: 200,
-    description: 'The email has been successfully sent to the user.',
-    type: ResponseStatus,
-  })
-  @ApiResponse({ status: 404, description: 'User not found.' })
   @Post(':userId/email/sent')
   @Permissions('canSendEmail')
   async sendEmail(

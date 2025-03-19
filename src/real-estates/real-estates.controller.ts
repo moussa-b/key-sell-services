@@ -293,6 +293,7 @@ export class RealEstatesController {
         `Real estate with ID ${realEstate} not found`,
       );
     }
+    await this.sleep(10000);
     const pdfBuffer = await this.realEstateService.export(
       realEstate,
       acceptLanguage,
@@ -303,5 +304,9 @@ export class RealEstatesController {
       `attachment; filename="${DateUtils.formatToFileName(new Date())}_export_${realEstateId}.pdf"`,
     );
     res.send(pdfBuffer);
+  }
+
+  sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

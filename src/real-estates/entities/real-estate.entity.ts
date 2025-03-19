@@ -1,10 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { RealEstateType } from './real-estate-type.enum';
 import { Address } from '../../shared/models/address.entity';
 
 export class RealEstate {
   id: number;
-  @ApiProperty({ enum: ['NONE', 'HOUSE', 'VILLA', 'APARTMENT'] })
   type: RealEstateType;
   terraced: boolean;
   surface: number;

@@ -12,7 +12,6 @@ import {
 import { CalendarEventsService } from './calendar-events.service';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CalendarEvent } from './entities/calendar-event.entity';
 import { ResponseStatus } from '../shared/dto/response-status.dto';
@@ -21,18 +20,11 @@ import { ConnectedUser } from '../shared/models/current-user';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 
-@ApiTags('Calendar Events')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('calendar-events')
 export class CalendarEventsController {
   constructor(private readonly calendarEventsService: CalendarEventsService) {}
 
-  @ApiOperation({ summary: 'Create a new calendar event' })
-  @ApiResponse({
-    status: 201,
-    description: 'The event has been successfully created.',
-    type: CalendarEvent,
-  })
   @Post()
   @Permissions('canEditCalendarEvents')
   create(
@@ -43,25 +35,12 @@ export class CalendarEventsController {
     return this.calendarEventsService.create(createCalendarEventDto);
   }
 
-  @ApiOperation({ summary: 'Retrieve a list of all calendar events' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of all calendar events.',
-    type: [CalendarEvent],
-  })
   @Get()
   @Permissions('canShowCalendarEvents')
   findAll(): Promise<CalendarEvent[]> {
     return this.calendarEventsService.findAll();
   }
 
-  @ApiOperation({ summary: 'Retrieve a calendar event by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The calendar event with the given ID.',
-    type: CalendarEvent,
-  })
-  @ApiResponse({ status: 404, description: 'Calendar event not found.' })
   @Get(':id')
   @Permissions('canShowCalendarEvents')
   async findOne(@Param('id') id: string): Promise<CalendarEvent> {
@@ -72,13 +51,6 @@ export class CalendarEventsController {
     return calendarEvent;
   }
 
-  @ApiOperation({ summary: 'Update a calendar event' })
-  @ApiResponse({
-    status: 200,
-    description: 'The calendar event has been successfully updated.',
-    type: CalendarEvent,
-  })
-  @ApiResponse({ status: 404, description: 'Calendar event not found.' })
   @Patch(':id')
   @Permissions('canEditCalendarEvents')
   async update(
@@ -94,12 +66,6 @@ export class CalendarEventsController {
     return this.calendarEventsService.update(+id, updateCalendarEventDto);
   }
 
-  @ApiOperation({ summary: 'Delete a calendar event by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The calendar event has been successfully deleted.',
-    type: ResponseStatus,
-  })
   @Delete(':id')
   @Permissions('canEditCalendarEvents')
   async remove(@Param('id') id: string): Promise<ResponseStatus> {
