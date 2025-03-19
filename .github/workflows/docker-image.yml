@@ -68,3 +68,13 @@ jobs:
           tags: |
             bdzapps/key-sell-services:latest
             bdzapps/key-sell-services:${{ env.NEW_VERSION }}
+
+      - name: Restart Docker Compose on remote server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            chmod +x ${{ secrets.DOCKER_COMPOSE_SCRIPT_PATH }}
+            ${{ secrets.DOCKER_COMPOSE_SCRIPT_PATH }}
