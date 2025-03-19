@@ -39,7 +39,7 @@ export class MailService {
           },
         },
         {
-          from: '"No Reply" <noreply@example.com>',
+          from: this.config.get<string>('EMAIL_USER'),
         },
       );
 
