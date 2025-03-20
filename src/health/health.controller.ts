@@ -12,6 +12,7 @@ import { CalendarEventsHealthIndicator } from '../calendar-events/calendar-event
 import { BuyersHealthIndicator } from '../buyers/buyers-health.indicator';
 import { RealEstatesHealthIndicator } from '../real-estates/real-estates-health.indicator';
 import { MediasHealthIndicator } from '../medias/medias-health.indicator';
+import { PdfHealthIndicator } from '../shared/pdf/pdf-health.indicator';
 
 @Controller('health')
 export class HealthController {
@@ -25,6 +26,7 @@ export class HealthController {
     private readonly calendarEventsHealthIndicator: CalendarEventsHealthIndicator,
     private readonly realEstateHealthIndicator: RealEstatesHealthIndicator,
     private readonly mediasHealthIndicator: MediasHealthIndicator,
+    private readonly pdfHealthIndicator: PdfHealthIndicator,
   ) {}
 
   @Get()
@@ -39,6 +41,7 @@ export class HealthController {
       () => this.calendarEventsHealthIndicator.isHealthy(),
       () => this.realEstateHealthIndicator.isHealthy(),
       () => this.mediasHealthIndicator.isHealthy(),
+      () => this.pdfHealthIndicator.isHealthy(),
     ]);
   }
 }

@@ -19,6 +19,7 @@ import { CommonService } from './common.service';
 import { PdfService } from './pdf/pdf.service';
 import { AppLoggerService } from './logger/app-logger.service';
 import { HttpModule } from '@nestjs/axios';
+import { PdfHealthIndicator } from './pdf/pdf-health.indicator';
 
 @Global()
 @Module({
@@ -48,6 +49,7 @@ import { HttpModule } from '@nestjs/axios';
     MailService,
     DbHealthIndicator,
     MailHealthIndicator,
+    PdfHealthIndicator,
     {
       provide: DatabaseService,
       useClass: MysqlService,
@@ -66,6 +68,7 @@ import { HttpModule } from '@nestjs/axios';
     MailService,
     DbHealthIndicator,
     MailHealthIndicator,
+    PdfHealthIndicator,
     AddressesRepository,
     AddressesService,
     PdfService,
