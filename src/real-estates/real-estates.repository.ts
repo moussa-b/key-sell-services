@@ -27,17 +27,19 @@ export class RealEstatesRepository {
     realEstate.id = row['id'];
     realEstate.type = row['type'] || RealEstateType.NONE;
     realEstate.terraced = row['terraced'] === 1;
-    realEstate.surface = row['surface'];
+    realEstate.surface = !isNaN(row['surface']) ? Number(row['surface']) : 0;
     realEstate.roomCount = row['room_count'];
     realEstate.showerCount = row['shower_count'];
     realEstate.terraceCount = row['terrace_count'];
     realEstate.hasGarden = row['has_garden'] === 1;
-    realEstate.gardenSurface = row['garden_surface'];
+    realEstate.gardenSurface = !isNaN(row['garden_surface'])
+      ? Number(row['garden_surface'])
+      : 0;
     realEstate.isSecured = row['is_secured'] === 1;
     realEstate.securityDetail = row['security_detail'];
     realEstate.facadeCount = row['facade_count'];
     realEstate.location = row['location'];
-    realEstate.price = row['price'];
+    realEstate.price = !isNaN(row['price']) ? Number(row['price']) : 0;
     realEstate.priceCurrency = row['price_currency'];
     realEstate.remark = row['remark'];
     realEstate.createdBy = row['created_by'];
