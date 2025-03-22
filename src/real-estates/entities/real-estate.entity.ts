@@ -1,5 +1,6 @@
 import { RealEstateType } from './real-estate-type.enum';
 import { Address } from '../../shared/models/address.entity';
+import { RealEstateStatus } from './real-estate-status.enum';
 
 export class RealEstate {
   id: number;
@@ -20,6 +21,8 @@ export class RealEstate {
   remark?: string;
   address: Address;
   owners: number[];
+  status: RealEstateStatus;
+  statusRemark: string;
   createdBy?: number;
   createdAt: Date;
   updatedBy?: number;

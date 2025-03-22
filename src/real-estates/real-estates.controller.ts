@@ -34,6 +34,7 @@ import { MediasService } from '../medias/medias.service';
 import { MediaType } from '../medias/entities/media-type.enum';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { UpdateStatusDto } from './dto/update-status.dto';
 
 const getFilename = (
   req: Request,
@@ -119,6 +120,20 @@ export class RealEstatesController {
     @Body() updateRealEstateDto: RealEstateDto,
   ): Promise<RealEstate> {
     return this.realEstateService.update(+realEstateId, updateRealEstateDto);
+  }
+
+  @Patch(':id/status')
+  @Permissions('canEditRealEstate')
+  updateStatus(
+    @Param('id') realEstateId: string,
+    @Body() updateStatusDto: UpdateStatusDto,
+    @CurrentUser() user: ConnectedUser,
+  ): Promise<boolean> {
+    return this.realEstateService.updateStatus(
+      +realEstateId,
+      updateStatusDto,
+      user.id,
+    );
   }
 
   @Delete(':id')

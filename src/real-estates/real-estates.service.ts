@@ -11,6 +11,7 @@ import { MediasService } from '../medias/medias.service';
 import * as path from 'path';
 import { PdfService } from '../shared/pdf/pdf.service';
 import { AppLoggerService } from '../shared/logger/app-logger.service';
+import { UpdateStatusDto } from './dto/update-status.dto';
 
 @Injectable()
 export class RealEstatesService {
@@ -51,6 +52,18 @@ export class RealEstatesService {
     updateRealEstateDto: RealEstateDto,
   ): Promise<RealEstateDto> {
     return this.realEstateRepository.update(realEstateId, updateRealEstateDto);
+  }
+
+  async updateStatus(
+    realEstateId: number,
+    updateStatusDto: UpdateStatusDto,
+    updatedBy: number,
+  ): Promise<boolean> {
+    return this.realEstateRepository.updateStatus(
+      realEstateId,
+      updateStatusDto,
+      updatedBy,
+    );
   }
 
   async remove(realEstateId: number, addressId: number): Promise<boolean> {

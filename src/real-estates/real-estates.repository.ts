@@ -7,6 +7,8 @@ import { Address } from '../shared/models/address.entity';
 import { RealEstateType } from './entities/real-estate-type.enum';
 import { DateUtils } from '../utils/date-utils';
 import { Media } from '../medias/entities/media.entity';
+import { RealEstateStatus } from './entities/real-estate-status.enum';
+import { UpdateStatusDto } from './dto/update-status.dto';
 
 @Injectable()
 export class RealEstatesRepository {
@@ -42,6 +44,8 @@ export class RealEstatesRepository {
     realEstate.price = !isNaN(row['price']) ? Number(row['price']) : 0;
     realEstate.priceCurrency = row['price_currency'];
     realEstate.remark = row['remark'];
+    realEstate.status = row['status'] || RealEstateStatus.NONE;
+    realEstate.statusRemark = row['status_remark'];
     realEstate.createdBy = row['created_by'];
     realEstate.createdAt =
       row['created_at'] instanceof Date
@@ -291,6 +295,28 @@ export class RealEstatesRepository {
           );
         }
         return this.findOne(realEstateId);
+      });
+  }
+
+  updateStatus(
+    realEstateId: number,
+    updateStatusDto: UpdateStatusDto,
+    updatedBy: number,
+  ) {
+    const updateQuery = `UPDATE real_estates SET status = ?, status_remark = ?, updated_by = ? WHERE id = ?`;
+    return this.databaseService
+      .run(updateQuery, [
+        updateStatusDto.status || RealEstateStatus.FOR_SALE,
+        updateStatusDto.statusRemark || null,
+        updatedBy,
+        realEstateId,
+      ])
+      .then(async () => {
+        const result = await this.databaseService.get<{ count: number }>(
+          'SELECT COUNT(*) as count FROM real_estates WHERE id = ? AND status = ?',
+          [realEstateId, updateStatusDto.status],
+        );
+        return result.count === 1;
       });
   }
 
