@@ -52,11 +52,11 @@ export class CalendarEventsRepository {
         createCalendarEventDto.title,
         createCalendarEventDto.description,
         createCalendarEventDto.createdBy,
-        DateUtils.createDateToDatabaseFormat(
+        DateUtils.createDateTimeToDatabaseFormat(
           createCalendarEventDto.startDate,
           createCalendarEventDto.startHour,
         ),
-        DateUtils.createDateToDatabaseFormat(
+        DateUtils.createDateTimeToDatabaseFormat(
           createCalendarEventDto.endDate,
           createCalendarEventDto.endHour,
         ),
@@ -106,13 +106,13 @@ export class CalendarEventsRepository {
         updateCalendarEventDto.title || null,
         updateCalendarEventDto.description || null,
         updateCalendarEventDto.startDate && updateCalendarEventDto.startHour
-          ? DateUtils.createDateToDatabaseFormat(
+          ? DateUtils.createDateTimeToDatabaseFormat(
               updateCalendarEventDto.startDate,
               updateCalendarEventDto.startHour,
             )
           : null,
         updateCalendarEventDto.endDate && updateCalendarEventDto.endHour
-          ? DateUtils.createDateToDatabaseFormat(
+          ? DateUtils.createDateTimeToDatabaseFormat(
               updateCalendarEventDto.endDate,
               updateCalendarEventDto.endHour,
             )

@@ -107,6 +107,12 @@ export class RealEstatesController {
     return this.realEstateService.findAllOwners();
   }
 
+  @Get('buyers') // must come before @Get(':id')
+  @Permissions('canEditRealEstate')
+  findAllBuyers(): Promise<LabelValue<number>[]> {
+    return this.realEstateService.findAllBuyers();
+  }
+
   @Get(':id')
   @Permissions('canShowRealEstate')
   findOne(@Param('id') realEstateId: string): Promise<RealEstateDto> {
@@ -128,7 +134,7 @@ export class RealEstatesController {
     @Param('id') realEstateId: string,
     @Body() updateStatusDto: UpdateStatusDto,
     @CurrentUser() user: ConnectedUser,
-  ): Promise<boolean> {
+  ): Promise<RealEstateDto> {
     return this.realEstateService.updateStatus(
       +realEstateId,
       updateStatusDto,

@@ -58,7 +58,7 @@ export class RealEstatesService {
     realEstateId: number,
     updateStatusDto: UpdateStatusDto,
     updatedBy: number,
-  ): Promise<boolean> {
+  ): Promise<RealEstateDto> {
     return this.realEstateRepository.updateStatus(
       realEstateId,
       updateStatusDto,
@@ -75,6 +75,10 @@ export class RealEstatesService {
 
   findAllOwners(): Promise<LabelValue<number>[]> {
     return this.realEstateRepository.findAllOwners();
+  }
+
+  findAllBuyers(): Promise<LabelValue<number>[]> {
+    return this.realEstateRepository.findAllBuyers();
   }
 
   async uploadMedia(

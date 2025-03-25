@@ -21,8 +21,11 @@ export class RealEstate {
   remark?: string;
   address: Address;
   owners: number[];
+  buyers: number[];
   status: RealEstateStatus;
   statusRemark: string;
+  saleDate?: Date;
+  finalSellingPrice?: number;
   createdBy?: number;
   createdAt: Date;
   updatedBy?: number;

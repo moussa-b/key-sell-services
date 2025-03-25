@@ -17,6 +17,96 @@ export class RealEstatesRepository {
     private readonly addressesRepository: AddressesRepository,
   ) {}
 
+  private readonly selectQuery = `SELECT re.*,
+                                         a.id AS addressId,
+                                         a.street,
+                                         a.complement,
+                                         a.zip_code,
+                                         a.city,
+                                         a.country_code,
+                                         (SELECT CASE
+                                                     WHEN COUNT(DISTINCT res2.seller_id) > 0
+                                                         THEN JSON_ARRAYAGG(res2.seller_id)
+
+                                                     ELSE
+                                                         JSON_ARRAY()
+                                                     END
+                                          FROM real_estates_sellers res2
+                                          WHERE res2.real_estate_id = re.id)
+                                              AS owners,
+                                         (SELECT CASE
+                                                     WHEN COUNT(DISTINCT s2.id) > 0 THEN JSON_ARRAYAGG(
+                                                             JSON_OBJECT(
+                                                                     "label",
+                                                                     CONCAT(s2.last_name, " ", s2.first_name),
+                                                                     "value",
+                                                                     s2.id
+                                                             )
+                                                                                         )
+                                                     ELSE
+                                                         JSON_ARRAY()
+                                                     END
+                                          FROM real_estates_sellers res3
+                                                   JOIN sellers s2 ON res3.seller_id = s2.id
+                                          WHERE res3.real_estate_id = re.id)
+                                              AS owners_detail,
+                                         (SELECT CASE
+                                                     WHEN COUNT(DISTINCT res2.buyer_id) > 0
+                                                         THEN JSON_ARRAYAGG(res2.buyer_id)
+
+                                                     ELSE
+                                                         JSON_ARRAY()
+                                                     END
+                                          FROM real_estates_buyers res2
+                                          WHERE res2.real_estate_id = re.id)
+                                              AS buyers,
+                                         (SELECT CASE
+                                                     WHEN COUNT(DISTINCT s2.id) > 0 THEN JSON_ARRAYAGG(
+                                                             JSON_OBJECT(
+                                                                     "label",
+                                                                     CONCAT(s2.last_name, " ", s2.first_name),
+                                                                     "value",
+                                                                     s2.id
+                                                             )
+                                                                                         )
+                                                     ELSE
+                                                         JSON_ARRAY()
+                                                     END
+                                          FROM real_estates_buyers res3
+                                                   JOIN buyers s2 ON res3.buyer_id = s2.id
+                                          WHERE res3.real_estate_id = re.id)
+                                              AS buyers_detail,
+                                         (SELECT CASE
+                                                     WHEN COUNT(m.id) > 0 THEN JSON_ARRAYAGG(
+                                                             JSON_OBJECT(
+                                                                     "id",
+                                                                     m.id,
+                                                                     "uuid",
+                                                                     m.uuid,
+                                                                     "file_name",
+                                                                     m.file_name,
+                                                                     "media_type",
+                                                                     m.media_type,
+                                                                     "mime_type",
+                                                                     m.mime_type,
+                                                                     "file_size",
+                                                                     m.file_size,
+                                                                     "created_by",
+                                                                     m.created_by,
+                                                                     "created_at",
+                                                                     m.created_at
+                                                             )
+                                                                               )
+                                                     ELSE
+                                                         JSON_ARRAY()
+                                                     END
+                                          FROM real_estates_media rem
+                                                   JOIN medias m ON rem.media_id = m.id
+                                          WHERE rem.real_estate_id = re.id)
+                                              AS medias
+                                  FROM real_estates re
+                                           LEFT JOIN addresses a ON re.address_id = a.id`;
+
   labelValueRowMapper(row: any): LabelValue<number> {
     const labelValue = new LabelValue<number>();
     labelValue.label = row['label'];
@@ -46,6 +136,12 @@ export class RealEstatesRepository {
     realEstate.remark = row['remark'];
     realEstate.status = row['status'] || RealEstateStatus.NONE;
     realEstate.statusRemark = row['status_remark'];
+    realEstate.finalSellingPrice = row['final_selling_price'];
+    realEstate.saleDate = row['sale_date']
+      ? row['sale_date'] instanceof Date
+        ? row['sale_date']
+        : DateUtils.createDateFromDatabaseDate(row['sale_date'])
+      : undefined;
     realEstate.createdBy = row['created_by'];
     realEstate.createdAt =
       row['created_at'] instanceof Date
@@ -58,6 +154,8 @@ export class RealEstatesRepository {
         : DateUtils.createDateFromDatabaseDate(row['updated_at']);
     realEstate.owners = row['owners'];
     realEstate.ownersDetails = row['owners_detail'];
+    realEstate.buyers = row['buyers'];
+    realEstate.buyersDetails = row['buyers_detail'];
     realEstate.medias = row['medias'].map((mediaRow: any) => {
       const media = new Media(mediaRow);
       if (!includeMediaPath) {
@@ -87,9 +185,10 @@ export class RealEstatesRepository {
     }
     const insertQuery = `INSERT INTO real_estates (type, terraced, surface, room_count, shower_count, terrace_count,
                                                    has_garden, garden_surface, is_secured, security_detail,
-                                                   facade_count, location, price, price_currency, remark, address_id,
+                                                   facade_count, location, price, final_selling_price, price_currency,
+                                                   remark, address_id,
                                                    created_by)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertQuery, [
         createRealEstateDto.type,
@@ -104,6 +203,7 @@ export class RealEstatesRepository {
         createRealEstateDto.securityDetail,
         createRealEstateDto.facadeCount,
         createRealEstateDto.location,
+        createRealEstateDto.price,
         createRealEstateDto.price,
         createRealEstateDto.priceCurrency,
         createRealEstateDto.remark,
@@ -128,45 +228,7 @@ export class RealEstatesRepository {
 
   findAll(): Promise<RealEstateDto[]> {
     return this.databaseService.all<RealEstateDto>(
-      `SELECT re.*,
-              a.id AS addressId,
-              a.street,
-              a.complement,
-              a.zip_code,
-              a.city,
-              a.country_code,
-              (SELECT CASE
-                          WHEN COUNT(DISTINCT res2.seller_id) > 0
-                              THEN JSON_ARRAYAGG(res2.seller_id)
-                          ELSE JSON_ARRAY()
-                          END
-               FROM real_estates_sellers res2
-               WHERE res2.real_estate_id = re.id)
-                   AS owners,
-              (SELECT CASE
-                          WHEN COUNT(DISTINCT s2.id) > 0
-                              THEN JSON_ARRAYAGG(JSON_OBJECT("label", CONCAT(s2.last_name, " ", s2.first_name), "value",
-                                                             s2.id))
-                          ELSE JSON_ARRAY()
-                          END
-               FROM real_estates_sellers res3
-                        JOIN sellers s2 ON res3.seller_id = s2.id
-               WHERE res3.real_estate_id = re.id)
-                   AS owners_detail,
-              (SELECT CASE
-                          WHEN COUNT(m.id) > 0
-                              THEN JSON_ARRAYAGG(JSON_OBJECT("id", m.id, "uuid", m.uuid, "file_name", m.file_name,
-                                                             "media_type", m.media_type, "mime_type", m.mime_type, "file_size", m.file_size,
-                                                             "created_by", m.created_by, "created_at", m.created_at))
-                          ELSE JSON_ARRAY()
-                          END
-               FROM real_estates_media rem
-                        JOIN medias m ON rem.media_id = m.id
-               WHERE rem.real_estate_id = re.id)
-                   AS medias
-       FROM real_estates re
-                LEFT JOIN addresses a ON re.address_id = a.id
-       ORDER BY re.id ASC`,
+      `${this.selectQuery} ORDER BY re.id ASC`,
       undefined,
       this.rowMapper,
     );
@@ -177,45 +239,7 @@ export class RealEstatesRepository {
     includeMediaPath = false,
   ): Promise<RealEstateDto> {
     return this.databaseService.get<RealEstateDto>(
-      `SELECT re.*,
-              a.id AS addressId,
-              a.street,
-              a.complement,
-              a.zip_code,
-              a.city,
-              a.country_code,
-              (SELECT CASE
-                          WHEN COUNT(DISTINCT res2.seller_id) > 0
-                              THEN JSON_ARRAYAGG(res2.seller_id)
-                          ELSE JSON_ARRAY()
-                          END
-               FROM real_estates_sellers res2
-               WHERE res2.real_estate_id = re.id)
-                   AS owners,
-              (SELECT CASE
-                          WHEN COUNT(DISTINCT s2.id) > 0
-                              THEN JSON_ARRAYAGG(JSON_OBJECT("label", CONCAT(s2.last_name, " ", s2.first_name), "value",
-                                                             s2.id))
-                          ELSE JSON_ARRAY()
-                          END
-               FROM real_estates_sellers res3
-                        JOIN sellers s2 ON res3.seller_id = s2.id
-               WHERE res3.real_estate_id = re.id)
-                   AS owners_detail,
-              (SELECT CASE
-                          WHEN COUNT(m.id) > 0
-                              THEN JSON_ARRAYAGG(JSON_OBJECT("id", m.id, "uuid", m.uuid, "file_name", m.file_name,
-                                                             "media_type", m.media_type, "mime_type", m.mime_type, "absolute_path", m.absolute_path, "file_size", m.file_size,
-                                                             "created_by", m.created_by, "created_at", m.created_at))
-                          ELSE JSON_ARRAY()
-                          END
-               FROM real_estates_media rem
-                        JOIN medias m ON rem.media_id = m.id
-               WHERE rem.real_estate_id = re.id)
-                   AS medias
-       FROM real_estates re
-                LEFT JOIN addresses a ON re.address_id = a.id
-       WHERE re.id = ?`,
+      `${this.selectQuery} WHERE re.id = ?`,
       [realEstateId],
       (row: any) => this.rowMapper(row, includeMediaPath),
     );
@@ -294,6 +318,10 @@ export class RealEstatesRepository {
             ]),
           );
         }
+        await this.databaseService.run(
+          'UPDATE real_estates SET final_selling_price = ? WHERE id = ? AND status <> "SOLD"',
+          [updateRealEstateDto.price, realEstateId],
+        );
         return this.findOne(realEstateId);
       });
   }
@@ -303,20 +331,43 @@ export class RealEstatesRepository {
     updateStatusDto: UpdateStatusDto,
     updatedBy: number,
   ) {
-    const updateQuery = `UPDATE real_estates SET status = ?, status_remark = ?, updated_by = ? WHERE id = ?`;
+    const updateQuery = `UPDATE real_estates
+                         SET status        = ?,
+                             status_remark = ?,
+                             final_selling_price = COALESCE(?, final_selling_price),
+                             sale_date = ?,
+                             updated_by    = ?
+                         WHERE id = ?`;
     return this.databaseService
       .run(updateQuery, [
         updateStatusDto.status || RealEstateStatus.FOR_SALE,
         updateStatusDto.statusRemark || null,
+        updateStatusDto.finalSellingPrice || null,
+        updateStatusDto.saleDate
+          ? DateUtils.createDateToDatabaseFormat(updateStatusDto.saleDate)
+          : null,
         updatedBy,
         realEstateId,
       ])
       .then(async () => {
-        const result = await this.databaseService.get<{ count: number }>(
-          'SELECT COUNT(*) as count FROM real_estates WHERE id = ? AND status = ?',
-          [realEstateId, updateStatusDto.status],
+        await this.databaseService.run(
+          'DELETE FROM real_estates_buyers WHERE real_estate_id = ?',
+          [realEstateId],
         );
-        return result.count === 1;
+        if (
+          updateStatusDto.buyers?.length > 0 &&
+          updateStatusDto.status === RealEstateStatus.SOLD
+        ) {
+          const insertOwnerQuery = `REPLACE INTO real_estates_buyers (real_estate_id, buyer_id)`;
+          await this.databaseService.batchInsert(
+            insertOwnerQuery,
+            updateStatusDto.buyers.map((buyer: number) => [
+              realEstateId,
+              buyer,
+            ]),
+          );
+        }
+        return this.findOne(realEstateId);
       });
   }
 
@@ -340,6 +391,14 @@ export class RealEstatesRepository {
   findAllOwners(): Promise<LabelValue<number>[]> {
     return this.databaseService.all<LabelValue<number>>(
       'SELECT id as value, CONCAT(last_name, " ", first_name) as label FROM keysell.sellers ORDER BY label',
+      undefined,
+      this.labelValueRowMapper,
+    );
+  }
+
+  findAllBuyers(): Promise<LabelValue<number>[]> {
+    return this.databaseService.all<LabelValue<number>>(
+      'SELECT id as value, CONCAT(last_name, " ", first_name) as label FROM keysell.buyers ORDER BY label',
       undefined,
       this.labelValueRowMapper,
     );

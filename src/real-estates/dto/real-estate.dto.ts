@@ -4,5 +4,6 @@ import { Media } from '../../medias/entities/media.entity';
 
 export class RealEstateDto extends RealEstate {
   ownersDetails: LabelValue<number>[];
+  buyersDetails: LabelValue<number>[];
   medias: Media[];
 }

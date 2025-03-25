@@ -13,13 +13,21 @@ export class DateUtils {
    * Combines a date string in `dd.mm.yyyy` format and a time string in `hh:mm` format
    * into database date format.
    */
-  static createDateToDatabaseFormat(
+  static createDateTimeToDatabaseFormat(
     startDate: string,
     startHour: string,
   ): string {
     const [day, month, year] = startDate.split('.');
     const isoString = `${year}-${month}-${day}T${startHour}`;
-    return DateUtils.formatToDatabaseFormat(new Date(isoString));
+    return DateUtils.formatToDatabaseDateTimeFormat(new Date(isoString));
+  }
+
+  /**
+   * Convert a date string in `dd.mm.yyyy` format into database date format.
+   */
+  static createDateToDatabaseFormat(startDate: string): string {
+    const [day, month, year] = startDate.split('.');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -40,7 +48,7 @@ export class DateUtils {
    * Formats a JavaScript Date object to a database-friendly format: `yyyy-mm-dd hh:mm:ss`
    * @param date - The Date object to format
    */
-  static formatToDatabaseFormat(date: Date): string {
+  static formatToDatabaseDateTimeFormat(date: Date): string {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
