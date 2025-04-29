@@ -1,0 +1,9 @@
+export enum RealEstateAssignment {
+  NONE = 'NONE',
+  HOUSE = 'HOUSE',
+  VILLA = 'VILLA',
+  APARTMENT = 'APARTMENT',
+  COMMERCIAL_SPACE = 'COMMERCIAL_SPACE',
+  OFFICE = 'OFFICE',
+  AGRICULTURE = 'AGRICULTURE',
+}

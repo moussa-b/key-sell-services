@@ -120,6 +120,10 @@ export class RealEstatesRepository {
     realEstate.type = row['type'] || RealEstateType.NONE;
     realEstate.terraced = row['terraced'] === 1;
     realEstate.surface = !isNaN(row['surface']) ? Number(row['surface']) : 0;
+    realEstate.totalSurface = !isNaN(row['total_surface'])
+      ? Number(row['total_surface'])
+      : 0;
+    realEstate.yearOfConstruction = row['year_of_construction'];
     realEstate.roomCount = row['room_count'];
     realEstate.showerCount = row['shower_count'];
     realEstate.terraceCount = row['terrace_count'];
@@ -131,6 +135,8 @@ export class RealEstatesRepository {
     realEstate.securityDetail = row['security_detail'];
     realEstate.facadeCount = row['facade_count'];
     realEstate.location = row['location'];
+    realEstate.orientation = row['orientation'];
+    realEstate.assignment = row['assignment'];
     realEstate.price = !isNaN(row['price']) ? Number(row['price']) : 0;
     realEstate.priceCurrency = row['price_currency'];
     realEstate.remark = row['remark'];
@@ -183,17 +189,19 @@ export class RealEstatesRepository {
       await this.addressesRepository.create(address);
       addressId = address.id;
     }
-    const insertQuery = `INSERT INTO real_estates (type, terraced, surface, room_count, shower_count, terrace_count,
+    const insertQuery = `INSERT INTO real_estates (type, terraced, surface, total_surface, year_of_construction, room_count, shower_count, terrace_count,
                                                    has_garden, garden_surface, is_secured, security_detail,
-                                                   facade_count, location, price, final_selling_price, price_currency,
+                                                   facade_count, location, price, final_selling_price, price_currency, orientation, assignment,
                                                    remark, address_id,
                                                    created_by)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertQuery, [
         createRealEstateDto.type,
         createRealEstateDto.terraced,
-        createRealEstateDto.surface,
+        createRealEstateDto.surface || 0,
+        createRealEstateDto.totalSurface || 0,
+        createRealEstateDto.yearOfConstruction,
         createRealEstateDto.roomCount,
         createRealEstateDto.showerCount,
         createRealEstateDto.terraceCount,
@@ -206,6 +214,8 @@ export class RealEstatesRepository {
         createRealEstateDto.price,
         createRealEstateDto.price,
         createRealEstateDto.priceCurrency,
+        createRealEstateDto.orientation,
+        createRealEstateDto.assignment,
         createRealEstateDto.remark,
         addressId || null,
         createRealEstateDto.createdBy,
@@ -263,30 +273,36 @@ export class RealEstatesRepository {
       addressId = 0;
     }
     const updateQuery = `
-        UPDATE real_estates
-        SET type            = ?,
-            terraced        = ?,
-            surface         = ?,
-            room_count      = ?,
-            shower_count    = ?,
-            terrace_count   = ?,
-            has_garden      = ?,
-            garden_surface  = ?,
-            is_secured      = ?,
-            security_detail = ?,
-            facade_count    = ?,
-            location        = ?,
-            price           = ?,
-            price_currency  = ?,
-            remark          = ?,
-            address_id      = ?,
-            updated_by      = ?
-        WHERE id = ?`;
+      UPDATE real_estates
+      SET type                 = ?,
+          terraced             = ?,
+          surface              = ?,
+          total_surface        = ?,
+          year_of_construction = ?,
+          room_count           = ?,
+          shower_count         = ?,
+          terrace_count        = ?,
+          has_garden           = ?,
+          garden_surface       = ?,
+          is_secured           = ?,
+          security_detail      = ?,
+          facade_count         = ?,
+          location             = ?,
+          price                = ?,
+          price_currency       = ?,
+          orientation          = ?,
+          assignment           = ?,
+          remark               = ?,
+          address_id           = ?,
+          updated_by           = ?
+      WHERE id = ?`;
     return this.databaseService
       .run(updateQuery, [
         updateRealEstateDto.type || null,
         updateRealEstateDto.terraced,
-        updateRealEstateDto.surface || null,
+        updateRealEstateDto.surface || 0,
+        updateRealEstateDto.totalSurface || 0,
+        updateRealEstateDto.yearOfConstruction || null,
         updateRealEstateDto.roomCount || null,
         updateRealEstateDto.showerCount || null,
         updateRealEstateDto.terraceCount || null,
@@ -298,6 +314,8 @@ export class RealEstatesRepository {
         updateRealEstateDto.location || null,
         updateRealEstateDto.price || null,
         updateRealEstateDto.priceCurrency || null,
+        updateRealEstateDto.orientation || null,
+        updateRealEstateDto.assignment || null,
         updateRealEstateDto.remark || null,
         addressId || null,
         updateRealEstateDto.updatedBy,

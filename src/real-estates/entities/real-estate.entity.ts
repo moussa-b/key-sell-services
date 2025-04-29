@@ -1,12 +1,16 @@
 import { RealEstateType } from './real-estate-type.enum';
 import { Address } from '../../shared/models/address.entity';
 import { RealEstateStatus } from './real-estate-status.enum';
+import { RealEstateOrientation } from './real-estate-orientation.enum';
+import { RealEstateAssignment } from './real-estate-assignment.enum';
 
 export class RealEstate {
   id: number;
   type: RealEstateType;
   terraced: boolean;
   surface: number;
+  totalSurface?: number;
+  yearOfConstruction?: number;
   roomCount: number;
   showerCount?: number;
   terraceCount?: number;
@@ -16,6 +20,8 @@ export class RealEstate {
   securityDetail?: string;
   facadeCount?: number;
   location?: string;
+  orientation?: RealEstateOrientation;
+  assignment?: RealEstateAssignment;
   price: number;
   priceCurrency: string;
   remark?: string;

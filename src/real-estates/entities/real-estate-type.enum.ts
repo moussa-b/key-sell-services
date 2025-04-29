@@ -3,4 +3,5 @@ export enum RealEstateType {
   HOUSE = 'HOUSE',
   VILLA = 'VILLA',
   APARTMENT = 'APARTMENT',
+  LAND = 'LAND',
 }
