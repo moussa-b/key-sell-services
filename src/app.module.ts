@@ -9,6 +9,7 @@ import { CalendarEventsModule } from './calendar-events/calendar-events.module';
 import { BuyersModule } from './buyers/buyers.module';
 import { RealEstatesModule } from './real-estates/real-estates.module';
 import { MediasModule } from './medias/medias.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Global()
 @Module({
@@ -21,6 +22,7 @@ import { MediasModule } from './medias/medias.module';
     VersionModule,
     CalendarEventsModule,
     BuyersModule,
+    TasksModule,
     RealEstatesModule,
     MediasModule,
   ],

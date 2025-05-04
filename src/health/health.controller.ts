@@ -13,6 +13,7 @@ import { BuyersHealthIndicator } from '../buyers/buyers-health.indicator';
 import { RealEstatesHealthIndicator } from '../real-estates/real-estates-health.indicator';
 import { MediasHealthIndicator } from '../medias/medias-health.indicator';
 import { PdfHealthIndicator } from '../shared/pdf/pdf-health.indicator';
+import { TasksHealthIndicator } from '../tasks/tasks-health.indicator';
 
 @Controller('health')
 export class HealthController {
@@ -27,6 +28,7 @@ export class HealthController {
     private readonly realEstateHealthIndicator: RealEstatesHealthIndicator,
     private readonly mediasHealthIndicator: MediasHealthIndicator,
     private readonly pdfHealthIndicator: PdfHealthIndicator,
+    private readonly tasksHealthIndicator: TasksHealthIndicator,
   ) {}
 
   @Get()
@@ -42,6 +44,7 @@ export class HealthController {
       () => this.realEstateHealthIndicator.isHealthy(),
       () => this.mediasHealthIndicator.isHealthy(),
       () => this.pdfHealthIndicator.isHealthy(),
+      () => this.tasksHealthIndicator.isHealthy(),
     ]);
   }
 }

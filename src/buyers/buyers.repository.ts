@@ -27,10 +27,12 @@ export class BuyersRepository {
     buyer.preferredLanguage = row['preferred_language'];
     buyer.budget = row['budget'];
     buyer.budgetCurrency = row['budget_currency'];
+    buyer.createdBy = row['created_by'];
     buyer.createdAt =
       row['created_at'] instanceof Date
         ? row['created_at']
         : DateUtils.createDateFromDatabaseDate(row['created_at']);
+    buyer.updatedBy = row['updated_by'];
     buyer.updatedAt =
       row['updated_at'] instanceof Date
         ? row['updated_at']

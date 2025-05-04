@@ -107,13 +107,6 @@ export class RealEstatesRepository {
                                   FROM real_estates re
                                            LEFT JOIN addresses a ON re.address_id = a.id`;
 
-  labelValueRowMapper(row: any): LabelValue<number> {
-    const labelValue = new LabelValue<number>();
-    labelValue.label = row['label'];
-    labelValue.value = row['value'];
-    return labelValue;
-  }
-
   rowMapper(row: any, includeMediaPath = false): RealEstateDto {
     const realEstate = new RealEstateDto();
     realEstate.id = row['id'];
@@ -410,7 +403,7 @@ export class RealEstatesRepository {
     return this.databaseService.all<LabelValue<number>>(
       'SELECT id as value, CONCAT(last_name, " ", first_name) as label FROM keysell.sellers ORDER BY label',
       undefined,
-      this.labelValueRowMapper,
+      this.databaseService.labelValueRowMapper,
     );
   }
 
@@ -418,7 +411,7 @@ export class RealEstatesRepository {
     return this.databaseService.all<LabelValue<number>>(
       'SELECT id as value, CONCAT(last_name, " ", first_name) as label FROM keysell.buyers ORDER BY label',
       undefined,
-      this.labelValueRowMapper,
+      this.databaseService.labelValueRowMapper,
     );
   }
 

@@ -247,14 +247,14 @@ export class UsersService {
         }),
         fields: [
           {
-            value: 'canShowRealEstate',
+            value: 'canShowRealEstates',
             label: this.i18nService.translate(
               'user_access.can_show_real_estate',
               { lang: acceptLanguage },
             ),
           },
           {
-            value: 'canEditRealEstate',
+            value: 'canEditRealEstates',
             label: this.i18nService.translate(
               'user_access.can_edit_real_estate',
               { lang: acceptLanguage },
@@ -391,5 +391,9 @@ export class UsersService {
     userAccess: UserAccess,
   ): Promise<UserAccess> {
     return this.usersRepository.updateUserAccess(userId, userAccess);
+  }
+
+  async findAllUsers(): Promise<LabelValue<number>[]> {
+    return this.usersRepository.findAllUsers();
   }
 }

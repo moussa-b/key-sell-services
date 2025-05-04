@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { RealEstateDto } from './dto/real-estate.dto';
 import { RealEstatesRepository } from './real-estates.repository';
 import { LabelValue } from '../shared/dto/label-value.dto';
@@ -12,6 +16,11 @@ import * as path from 'path';
 import { PdfService } from '../shared/pdf/pdf.service';
 import { AppLoggerService } from '../shared/logger/app-logger.service';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { TasksService } from '../tasks/tasks.service';
+import { Task, TaskStatus } from '../tasks/entities/task.entity';
+import { CreateTaskDto } from '../tasks/dto/create-task.dto';
+import { UsersService } from '../users/users.service';
+import { UpdateTaskDto } from '../tasks/dto/update-task.dto';
 
 @Injectable()
 export class RealEstatesService {
@@ -30,6 +39,8 @@ export class RealEstatesService {
     private readonly mediasService: MediasService,
     private readonly pdfService: PdfService,
     private readonly logger: AppLoggerService,
+    private readonly tasksService: TasksService,
+    private readonly userService: UsersService,
   ) {}
 
   async create(createRealEstateDto: RealEstateDto): Promise<RealEstateDto> {
@@ -38,6 +49,15 @@ export class RealEstatesService {
 
   async findAll(): Promise<RealEstateDto[]> {
     return this.realEstateRepository.findAll();
+  }
+
+  async checkRealEstateId(realEstateId: string) {
+    const realEstate = await this.findOne(+realEstateId, true);
+    if (!realEstate) {
+      throw new NotFoundException(
+        `Real estate with ID ${realEstate} not found`,
+      );
+    }
   }
 
   async findOne(
@@ -247,5 +267,36 @@ export class RealEstatesService {
   private async convertImageToBase64(imagePath: string): Promise<string> {
     const imageBuffer = await readFile(imagePath);
     return `data:image/png;base64,${imageBuffer.toString('base64')}`;
+  }
+
+  findAllByRealEstateId(realEstateId: number): Promise<Task[]> {
+    return this.tasksService.findAllByRealEstateId(realEstateId);
+  }
+
+  createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+    return this.tasksService.create(createTaskDto);
+  }
+
+  findAllUsers(): Promise<LabelValue<number>[]> {
+    return this.userService.findAllUsers();
+  }
+
+  updateTask(taskId: number, updateTaskDto: UpdateTaskDto): Promise<Task> {
+    return this.tasksService.update(taskId, updateTaskDto);
+  }
+
+  updateTaskStatus(
+    taskId: number,
+    updateTaskStatusDto: { status: TaskStatus; updatedBy: number },
+  ): Promise<boolean> {
+    return this.tasksService.updateTaskStatus(taskId, updateTaskStatusDto);
+  }
+
+  removeTask(taskId: number): Promise<boolean> {
+    return this.tasksService.remove(taskId);
+  }
+
+  findAllTaskType(lang = 'en'): Promise<LabelValue<number>[]> {
+    return this.tasksService.findAllTaskType(lang);
   }
 }

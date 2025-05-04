@@ -8,6 +8,7 @@ import { CalendarEventsModule } from '../calendar-events/calendar-events.module'
 import { BuyersModule } from '../buyers/buyers.module';
 import { RealEstatesModule } from '../real-estates/real-estates.module';
 import { MediasModule } from '../medias/medias.module';
+import { TasksModule } from '../tasks/tasks.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MediasModule } from '../medias/medias.module';
     CalendarEventsModule,
     RealEstatesModule,
     MediasModule,
+    TasksModule,
   ],
   controllers: [HealthController],
 })

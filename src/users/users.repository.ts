@@ -8,6 +8,7 @@ import { DatabaseService } from '../shared/db/database-service';
 import { DateUtils } from '../utils/date-utils';
 import { UserAccess } from './entities/user-access.entity';
 import { UserAccessConfiguration } from './entities/user-access.configuration';
+import { LabelValue } from '../shared/dto/label-value.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -342,6 +343,14 @@ export class UsersRepository {
       'SELECT JSON_OBJECTAGG(access, IF(active = 1, true, false)) AS userAccess FROM users_access WHERE user_id = ?',
       [userId],
       (row) => new UserAccess(row['userAccess']),
+    );
+  }
+
+  findAllUsers() {
+    return this.databaseService.all<LabelValue<number>>(
+      'SELECT id as value, CONCAT(last_name, " ", first_name) as label FROM keysell.users WHERE id > 1 AND is_active > 0 ORDER BY label',
+      undefined,
+      this.databaseService.labelValueRowMapper,
     );
   }
 }

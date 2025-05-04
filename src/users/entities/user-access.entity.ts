@@ -3,15 +3,17 @@ import { UserRole } from './user-role.enum';
 export class UserAccess {
   canEditBuyers = false;
   canEditCalendarEvents = false;
-  canEditRealEstate = false;
+  canEditRealEstates = false;
   canEditSellers = false;
+  canEditTasks = false;
   canEditUsers = false;
   canEditUsersAccess = false;
   canSendEmail = false;
   canShowBuyers = false;
   canShowCalendarEvents = false;
-  canShowRealEstate = false;
+  canShowRealEstates = false;
   canShowSellers = false;
+  canShowTasks = false;
   canShowUsers = false;
   canShowUsersAccess = false;
 
@@ -21,36 +23,42 @@ export class UserAccess {
     if (userRole) {
       switch (userRole) {
         case UserRole.USER:
+          this.canEditTasks = true;
           this.canShowBuyers = true;
           this.canShowCalendarEvents = true;
-          this.canShowRealEstate = true;
+          this.canShowRealEstates = true;
           this.canShowSellers = true;
+          this.canShowTasks = true;
           break;
         case UserRole.MANAGER:
           this.canEditBuyers = true;
           this.canEditCalendarEvents = true;
-          this.canEditRealEstate = true;
+          this.canEditRealEstates = true;
           this.canEditSellers = true;
+          this.canEditTasks = true;
           this.canSendEmail = true;
           this.canShowBuyers = true;
           this.canShowCalendarEvents = true;
-          this.canShowRealEstate = true;
+          this.canShowRealEstates = true;
           this.canShowSellers = true;
+          this.canShowTasks = true;
           this.canShowUsers = true;
           this.canShowUsersAccess = true;
           break;
         case UserRole.ADMIN:
           this.canEditBuyers = true;
           this.canEditCalendarEvents = true;
-          this.canEditRealEstate = true;
+          this.canEditRealEstates = true;
           this.canEditSellers = true;
+          this.canEditTasks = true;
           this.canEditUsers = true;
           this.canEditUsersAccess = true;
           this.canSendEmail = true;
           this.canShowBuyers = true;
           this.canShowCalendarEvents = true;
-          this.canShowRealEstate = true;
+          this.canShowRealEstates = true;
           this.canShowSellers = true;
+          this.canShowTasks = true;
           this.canShowUsers = true;
           this.canShowUsersAccess = true;
           break;
@@ -60,15 +68,17 @@ export class UserAccess {
     // then give access with specific value
     this.setUserAccess(props, 'canEditBuyers');
     this.setUserAccess(props, 'canEditCalendarEvents');
-    this.setUserAccess(props, 'canEditRealEstate');
+    this.setUserAccess(props, 'canEditRealEstates');
     this.setUserAccess(props, 'canEditSellers');
+    this.setUserAccess(props, 'canEditTasks');
     this.setUserAccess(props, 'canEditUsers');
     this.setUserAccess(props, 'canEditUsersAccess');
     this.setUserAccess(props, 'canSendEmail');
     this.setUserAccess(props, 'canShowBuyers');
     this.setUserAccess(props, 'canShowCalendarEvents');
-    this.setUserAccess(props, 'canShowRealEstate');
+    this.setUserAccess(props, 'canShowRealEstates');
     this.setUserAccess(props, 'canShowSellers');
+    this.setUserAccess(props, 'canShowTasks');
     this.setUserAccess(props, 'canShowUsers');
     this.setUserAccess(props, 'canShowUsersAccess');
   }

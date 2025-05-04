@@ -26,10 +26,12 @@ export class SellersRepository {
     seller.sex = row['sex'];
     seller.preferredLanguage = row['preferred_language'];
     seller.address = row['address'];
+    seller.createdBy = row['created_by'];
     seller.createdAt =
       row['created_at'] instanceof Date
         ? row['created_at']
         : DateUtils.createDateFromDatabaseDate(row['created_at']);
+    seller.updatedBy = row['updated_by'];
     seller.updatedAt =
       row['updated_at'] instanceof Date
         ? row['updated_at']

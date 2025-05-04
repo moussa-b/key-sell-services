@@ -35,6 +35,9 @@ import { MediaType } from '../medias/entities/media-type.enum';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { Task, TaskStatus } from '../tasks/entities/task.entity';
+import { CreateTaskDto } from '../tasks/dto/create-task.dto';
+import { UpdateTaskDto } from '../tasks/dto/update-task.dto';
 
 const getFilename = (
   req: Request,
@@ -86,7 +89,7 @@ export class RealEstatesController {
   ) {}
 
   @Post()
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   create(
     @Body() createRealEstateDto: RealEstateDto,
     @CurrentUser() user: ConnectedUser,
@@ -96,31 +99,31 @@ export class RealEstatesController {
   }
 
   @Get()
-  @Permissions('canShowRealEstate')
+  @Permissions('canShowRealEstates')
   findAll(): Promise<RealEstateDto[]> {
     return this.realEstateService.findAll();
   }
 
   @Get('owners') // must come before @Get(':id')
-  @Permissions('canShowRealEstate')
+  @Permissions('canShowRealEstates')
   findAllOwners(): Promise<LabelValue<number>[]> {
     return this.realEstateService.findAllOwners();
   }
 
   @Get('buyers') // must come before @Get(':id')
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   findAllBuyers(): Promise<LabelValue<number>[]> {
     return this.realEstateService.findAllBuyers();
   }
 
   @Get(':id')
-  @Permissions('canShowRealEstate')
+  @Permissions('canShowRealEstates')
   findOne(@Param('id') realEstateId: string): Promise<RealEstateDto> {
     return this.realEstateService.findOne(+realEstateId);
   }
 
   @Patch(':id')
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   update(
     @Param('id') realEstateId: string,
     @Body() updateRealEstateDto: RealEstateDto,
@@ -129,7 +132,7 @@ export class RealEstatesController {
   }
 
   @Patch(':id/status')
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   updateStatus(
     @Param('id') realEstateId: string,
     @Body() updateStatusDto: UpdateStatusDto,
@@ -143,7 +146,7 @@ export class RealEstatesController {
   }
 
   @Delete(':id')
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   async remove(@Param('id') realEstateId: string): Promise<ResponseStatus> {
     const realEstate = await this.realEstateService.findOne(+realEstateId);
     if (!realEstate) {
@@ -172,7 +175,7 @@ export class RealEstatesController {
       }),
     }),
   )
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   async uploadPictures(
     @UploadedFiles(
       new ParseFilePipe({
@@ -211,7 +214,7 @@ export class RealEstatesController {
       }),
     }),
   )
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   async uploadVideos(
     @UploadedFiles(
       new ParseFilePipe({
@@ -250,7 +253,7 @@ export class RealEstatesController {
       }),
     }),
   )
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   async uploadDocuments(
     @UploadedFiles(
       new ParseFilePipe({
@@ -279,7 +282,7 @@ export class RealEstatesController {
   @Delete(':id/pictures/:uuid')
   @Delete(':id/videos/:uuid')
   @Delete(':id/documents/:uuid')
-  @Permissions('canEditRealEstate')
+  @Permissions('canEditRealEstates')
   async removePicture(
     @Param('id') realEstateId: string,
     @Param('uuid') mediaUuid: string,
@@ -314,7 +317,6 @@ export class RealEstatesController {
         `Real estate with ID ${realEstate} not found`,
       );
     }
-    await this.sleep(10000);
     const pdfBuffer = await this.realEstateService.export(
       realEstate,
       acceptLanguage,
@@ -327,7 +329,82 @@ export class RealEstatesController {
     res.send(pdfBuffer);
   }
 
-  sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  @Get(':realEstateId/tasks')
+  @Permissions('canShowTasks')
+  async findAllByRealEstateId(
+    @Param('realEstateId') realEstateId: string,
+  ): Promise<Task[]> {
+    await this.realEstateService.checkRealEstateId(realEstateId);
+    return this.realEstateService.findAllByRealEstateId(+realEstateId);
+  }
+
+  @Get(':realEstateId/users')
+  @Permissions('canEditTasks')
+  findAllUsers(): Promise<LabelValue<number>[]> {
+    return this.realEstateService.findAllUsers();
+  }
+
+  @Get(':realEstateId/tasks/types')
+  @Permissions('canEditTasks')
+  findAllTaskType(
+    @Headers('accept-language') acceptLanguage: string,
+  ): Promise<LabelValue<number>[]> {
+    return this.realEstateService.findAllTaskType(acceptLanguage);
+  }
+
+  @Post(':realEstateId/tasks')
+  @Permissions('canEditTasks')
+  async createTask(
+    @Param('realEstateId') realEstateId: string,
+    @Body() createTaskDto: CreateTaskDto,
+    @CurrentUser() user: ConnectedUser,
+  ): Promise<Task> {
+    await this.realEstateService.checkRealEstateId(realEstateId);
+    createTaskDto.createdBy = user.id;
+    createTaskDto.realEstateId = +realEstateId;
+    return this.realEstateService.createTask(createTaskDto);
+  }
+
+  @Patch(':realEstateId/tasks/:taskId')
+  @Permissions('canEditTasks')
+  async updateTask(
+    @Param('taskId') taskId: string,
+    @Param('realEstateId') realEstateId: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @CurrentUser() user: ConnectedUser,
+  ): Promise<Task> {
+    await this.realEstateService.checkRealEstateId(realEstateId);
+    updateTaskDto.realEstateId = +realEstateId;
+    updateTaskDto.updatedBy = user.id;
+    return this.realEstateService.updateTask(+taskId, updateTaskDto);
+  }
+
+  @Patch(':realEstateId/tasks/:taskId/status')
+  @Permissions('canEditTasks')
+  async updateTaskStatus(
+    @Param('taskId') taskId: string,
+    @Param('realEstateId') realEstateId: string,
+    @Body() updateTaskStatusDto: { status: TaskStatus; updatedBy: number },
+    @CurrentUser() user: ConnectedUser,
+  ): Promise<ResponseStatus> {
+    await this.realEstateService.checkRealEstateId(realEstateId);
+    updateTaskStatusDto.updatedBy = user.id;
+    return {
+      status: await this.realEstateService.updateTaskStatus(
+        +taskId,
+        updateTaskStatusDto,
+      ),
+    };
+  }
+
+  @Delete(':realEstateId/tasks/:taskId')
+  async removeTask(
+    @Param('taskId') taskId: string,
+    @Param('realEstateId') realEstateId: string,
+  ): Promise<ResponseStatus> {
+    await this.realEstateService.checkRealEstateId(realEstateId);
+    return {
+      status: await this.realEstateService.removeTask(+taskId),
+    };
   }
 }

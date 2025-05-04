@@ -1,3 +1,5 @@
+import { LabelValue } from '../dto/label-value.dto';
+
 export abstract class DatabaseService {
   abstract run(query: string, params: any[]): Promise<number>;
 
@@ -10,4 +12,11 @@ export abstract class DatabaseService {
   abstract transaction(
     queries: { query: string; params: any[] }[],
   ): Promise<void>;
+
+  labelValueRowMapper(row: any): LabelValue<number> {
+    const labelValue = new LabelValue<number>();
+    labelValue.label = row['label'];
+    labelValue.value = row['value'];
+    return labelValue;
+  }
 }
