@@ -44,7 +44,7 @@ export class CalendarEventsRepository {
   async create(
     createCalendarEventDto: CreateCalendarEventDto,
   ): Promise<CalendarEvent> {
-    const insertQuery = `INSERT INTO calendar_events (uuid, title, description, user_id, start_date, end_date, status, reminder, recurring, recurring_event_id, created_by)
+    const insertQuery = `INSERT INTO keysell.calendar_events (uuid, title, description, user_id, start_date, end_date, status, reminder, recurring, recurring_event_id, created_by)
                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertQuery, [
@@ -73,7 +73,7 @@ export class CalendarEventsRepository {
 
   async findAll(): Promise<CalendarEvent[]> {
     return this.databaseService.all<CalendarEvent>(
-      'SELECT * FROM calendar_events ORDER BY created_at ASC',
+      'SELECT * FROM keysell.calendar_events ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );
@@ -81,7 +81,7 @@ export class CalendarEventsRepository {
 
   async findOne(id: number): Promise<CalendarEvent> {
     return this.databaseService.get<CalendarEvent>(
-      'SELECT * FROM calendar_events WHERE id = ?',
+      'SELECT * FROM keysell.calendar_events WHERE id = ?',
       [id],
       this.rowMapper,
     );
@@ -92,7 +92,7 @@ export class CalendarEventsRepository {
     updateCalendarEventDto: UpdateCalendarEventDto,
   ): Promise<CalendarEvent> {
     const updateQuery = `
-      UPDATE calendar_events
+      UPDATE keysell.calendar_events
       SET title = ?,
           description = ?,
           start_date = ?,
@@ -123,7 +123,7 @@ export class CalendarEventsRepository {
         id,
       ])
       .then(() => {
-        const selectQuery = `SELECT * FROM calendar_events WHERE id =?`;
+        const selectQuery = `SELECT * FROM keysell.calendar_events WHERE id =?`;
         return this.databaseService.get<CalendarEvent>(
           selectQuery,
           [id],
@@ -135,11 +135,11 @@ export class CalendarEventsRepository {
   async remove(id: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return this.databaseService
-        .run('DELETE FROM calendar_events WHERE id = ?', [id])
+        .run('DELETE FROM keysell.calendar_events WHERE id = ?', [id])
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM calendar_events WHERE id = ?',
+              'SELECT COUNT(*) as count FROM keysell.calendar_events WHERE id = ?',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 0))

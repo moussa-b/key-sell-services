@@ -24,7 +24,7 @@ export class MediasRepository {
   }
 
   async create(media: Media): Promise<Media> {
-    const insertQuery = `INSERT INTO medias (uuid, absolute_path, file_name, file_size, media_type, mime_type, created_by)
+    const insertQuery = `INSERT INTO keysell.medias (uuid, absolute_path, file_name, file_size, media_type, mime_type, created_by)
                          VALUES (?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertQuery, [
@@ -43,7 +43,7 @@ export class MediasRepository {
 
   async findOne(id: number): Promise<Media> {
     return this.databaseService.get<Media>(
-      'SELECT * FROM medias WHERE id = ?',
+      'SELECT * FROM keysell.medias WHERE id = ?',
       [id],
       this.rowMapper,
     );
@@ -51,7 +51,7 @@ export class MediasRepository {
 
   async findOneByUuid(uuid: string, includePath = false): Promise<Media> {
     return this.databaseService.get<Media>(
-      'SELECT * FROM medias WHERE uuid = ?',
+      'SELECT * FROM keysell.medias WHERE uuid = ?',
       [uuid],
       (row: any) => this.rowMapper(row, includePath),
     );
@@ -60,11 +60,11 @@ export class MediasRepository {
   async remove(id: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return this.databaseService
-        .run('DELETE FROM medias WHERE id = ?', [id])
+        .run('DELETE FROM keysell.medias WHERE id = ?', [id])
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM medias WHERE id = ?',
+              'SELECT COUNT(*) as count FROM keysell.medias WHERE id = ?',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 0))
@@ -79,7 +79,7 @@ export class MediasRepository {
     mediaType: MediaType,
   ): Promise<Media[]> {
     return this.databaseService.all<Media>(
-      'SELECT m.* FROM real_estates_media rem LEFT JOIN medias m ON m.id = rem.media_id WHERE real_estate_id = ? AND m.media_type = ?',
+      'SELECT m.* FROM keysell.real_estates_media rem LEFT JOIN keysell.medias m ON m.id = rem.media_id WHERE real_estate_id = ? AND m.media_type = ?',
       [realEstateId, mediaType],
       this.rowMapper,
     );

@@ -30,10 +30,10 @@ jobs:
           
           # If today is different from the stored date, reset last push counter
           if [ "$TODAY" != "$DATE_PART" ]; then
-          NEW_VERSION="$TODAY.01"
+            NEW_VERSION="$TODAY.01"
           else
-          NEW_PUSH_NUMBER=$(printf "%02d" $((10#$LAST_PUSH + 1)))  # Increment last push count
-          NEW_VERSION="$DATE_PART.$NEW_PUSH_NUMBER"
+            NEW_PUSH_NUMBER=$(printf "%02d" $((10#$LAST_PUSH + 1)))  # Increment last push count
+            NEW_VERSION="$DATE_PART.$NEW_PUSH_NUMBER"
           fi
           
           # Update package.json with new version
@@ -53,6 +53,12 @@ jobs:
           git add package.json
           git commit -m "Bump version to ${{ env.NEW_VERSION }}"
           git push origin main
+
+      - name: Create and push git tag
+        run: |
+          git fetch --tags
+          git tag v${{ env.NEW_VERSION }}
+          git push origin v${{ env.NEW_VERSION }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v3

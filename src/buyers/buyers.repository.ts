@@ -57,7 +57,7 @@ export class BuyersRepository {
       await this.addressesRepository.create(address);
       addressId = address.id;
     }
-    const insertBuyerQuery = `INSERT INTO buyers (uuid, first_name, last_name, email, phone, sex, preferred_language,
+    const insertBuyerQuery = `INSERT INTO keysell.buyers (uuid, first_name, last_name, email, phone, sex, preferred_language,
                                                   budget, budget_currency, address_id, created_by)
                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
@@ -81,7 +81,7 @@ export class BuyersRepository {
 
   async findAll(): Promise<Buyer[]> {
     return this.databaseService.all<Buyer>(
-      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM buyers b LEFT JOIN addresses a ON b.address_id = a.id ORDER BY created_at ASC',
+      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.buyers b LEFT JOIN keysell.addresses a ON b.address_id = a.id ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );
@@ -89,7 +89,7 @@ export class BuyersRepository {
 
   async findOne(id: number): Promise<Buyer> {
     return this.databaseService.get<Buyer>(
-      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM buyers b LEFT JOIN addresses a ON b.address_id = a.id WHERE b.id = ?',
+      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.buyers b LEFT JOIN keysell.addresses a ON b.address_id = a.id WHERE b.id = ?',
       [id],
       this.rowMapper,
     );
@@ -110,7 +110,7 @@ export class BuyersRepository {
       addressId = 0;
     }
     const updateQuery = `
-        UPDATE buyers
+        UPDATE keysell.buyers
         SET first_name         = ?,
             last_name          = ?,
             email              = ?,
@@ -144,11 +144,11 @@ export class BuyersRepository {
   async remove(id: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return this.databaseService
-        .run('DELETE FROM buyers WHERE id = ?', [id])
+        .run('DELETE FROM keysell.buyers WHERE id = ?', [id])
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM buyers WHERE id = ?',
+              'SELECT COUNT(*) as count FROM keysell.buyers WHERE id = ?',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 0))

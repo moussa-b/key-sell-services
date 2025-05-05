@@ -46,7 +46,7 @@ export class UsersRepository {
       isActive: boolean;
     },
   ): Promise<User> {
-    const insertQuery = `INSERT INTO users (
+    const insertQuery = `INSERT INTO keysell.users (
       uuid, username, email, password, first_name, last_name, sex, preferred_language, activation_token, role, is_active, created_by
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
@@ -71,7 +71,7 @@ export class UsersRepository {
 
   async findAll(): Promise<User[]> {
     return this.databaseService.all<User>(
-      'SELECT * FROM users ORDER BY created_at ASC',
+      'SELECT * FROM keysell.users ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );
@@ -103,7 +103,7 @@ export class UsersRepository {
     customerData: Partial<CreateUserDto>,
   ): Promise<User> {
     const updateQuery = `
-      UPDATE users
+      UPDATE keysell.users
       SET email = ?,
           first_name = ?,
           last_name = ?,
@@ -131,11 +131,11 @@ export class UsersRepository {
   async remove(id: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return this.databaseService
-        .run('DELETE FROM users WHERE id = ?', [id])
+        .run('DELETE FROM keysell.users WHERE id = ?', [id])
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM users WHERE id = ?',
+              'SELECT COUNT(*) as count FROM keysell.users WHERE id = ?',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 0))
@@ -152,9 +152,9 @@ export class UsersRepository {
     let query;
     if (includeUserAccess) {
       query =
-        "SELECT u.*, JSON_EXTRACT((SELECT c.property_value FROM configuration c WHERE c.category = 'standard' AND c.property_name = 'global_user_access'), '$') AS globalUserAccess, JSON_OBJECTAGG(COALESCE(ua.access, 'null_access'), JSON_MERGE_PATCH('{}', IF(ua.active = 1, 'true', 'false'))) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE email = ? OR username = ? GROUP BY u.id";
+        "SELECT u.*, JSON_EXTRACT((SELECT c.property_value FROM keysell.configuration c WHERE c.category = 'standard' AND c.property_name = 'global_user_access'), '$') AS globalUserAccess, JSON_OBJECTAGG(COALESCE(ua.access, 'null_access'), JSON_MERGE_PATCH('{}', IF(ua.active = 1, 'true', 'false'))) AS userAccess FROM keysell.users u LEFT JOIN keysell.users_access ua ON ua.user_id = u.id WHERE email = ? OR username = ? GROUP BY u.id";
     } else {
-      query = 'SELECT * FROM users WHERE email = ? OR username = ?';
+      query = 'SELECT * FROM keysell.users WHERE email = ? OR username = ?';
     }
     return this.databaseService.get<User>(query, [email, email], (row: any) => {
       const user = this.rowMapper(row);
@@ -178,7 +178,7 @@ export class UsersRepository {
 
   async findById(id: number): Promise<User> {
     return this.databaseService.get<User>(
-      'SELECT * FROM users WHERE id = ?',
+      'SELECT * FROM keysell.users WHERE id = ?',
       [id],
       this.rowMapper,
     );
@@ -186,7 +186,7 @@ export class UsersRepository {
 
   async findByActivationToken(activationToken: string): Promise<User> {
     return this.databaseService.get<User>(
-      'SELECT * FROM users WHERE activation_token = ?',
+      'SELECT * FROM keysell.users WHERE activation_token = ?',
       [activationToken],
       this.rowMapper,
     );
@@ -194,7 +194,7 @@ export class UsersRepository {
 
   async findByResetPasswordToken(resetPasswordToken: string): Promise<User> {
     return this.databaseService.get<User>(
-      'SELECT * FROM users WHERE reset_password_token = ? AND reset_password_expires > ?',
+      'SELECT * FROM keysell.users WHERE reset_password_token = ? AND reset_password_expires > ?',
       [resetPasswordToken, new Date()],
       this.rowMapper,
     );
@@ -204,13 +204,13 @@ export class UsersRepository {
     return new Promise((resolve, reject) => {
       return this.databaseService
         .run(
-          'UPDATE users SET is_active = true, activation_token = NULL, password = ? WHERE id = ?',
+          'UPDATE keysell.users SET is_active = true, activation_token = NULL, password = ? WHERE id = ?',
           [password, id],
         )
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM users WHERE id = ? AND is_active = true',
+              'SELECT COUNT(*) as count FROM keysell.users WHERE id = ? AND is_active = true',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 1))
@@ -228,13 +228,13 @@ export class UsersRepository {
     return new Promise((resolve, reject) => {
       return this.databaseService
         .run(
-          'UPDATE users SET reset_password_token = ?, reset_password_expires = ? WHERE id = ?',
+          'UPDATE keysell.users SET reset_password_token = ?, reset_password_expires = ? WHERE id = ?',
           [token, expires, id],
         )
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM users WHERE id = ? AND reset_password_token IS NOT NULL AND reset_password_expires IS NOT NULL',
+              'SELECT COUNT(*) as count FROM keysell.users WHERE id = ? AND reset_password_token IS NOT NULL AND reset_password_expires IS NOT NULL',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 1))
@@ -248,13 +248,13 @@ export class UsersRepository {
     return new Promise((resolve, reject) => {
       return this.databaseService
         .run(
-          'UPDATE users SET password = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
+          'UPDATE keysell.users SET password = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
           [hashedPassword, id],
         )
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM users WHERE id = ? AND reset_password_token IS NULL AND reset_password_expires IS NULL',
+              'SELECT COUNT(*) as count FROM keysell.users WHERE id = ? AND reset_password_token IS NULL AND reset_password_expires IS NULL',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 1))
@@ -271,7 +271,7 @@ export class UsersRepository {
     return new Promise((resolve, reject) => {
       return this.databaseService
         .run(
-          `UPDATE users SET username = COALESCE(?, username),
+          `UPDATE keysell.users SET username = COALESCE(?, username),
           password = COALESCE(?, password)
           WHERE id = ?`,
           [
@@ -287,7 +287,7 @@ export class UsersRepository {
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM users WHERE id = ? AND username = ?',
+              'SELECT COUNT(*) as count FROM keysell.users WHERE id = ? AND username = ?',
               [userId, updateUserSecurityDto.username],
             )
             .then((result: { count: number }) => resolve(result.count === 1))
@@ -304,10 +304,10 @@ export class UsersRepository {
     let query: string;
     if (includeGlobalUserAccess) {
       query =
-        'SELECT JSON_EXTRACT((SELECT c.property_value FROM configuration c WHERE c.category = "standard" AND c.property_name = "global_user_access"), "$") AS globalUserAccess, IF(COUNT(ua.user_id) > 0, JSON_OBJECTAGG(COALESCE(ua.access, "null_access"), JSON_MERGE_PATCH("{}", IF(ua.active = 1, "true", "false"))), NULL) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE u.id = ? GROUP BY u.id';
+        'SELECT JSON_EXTRACT((SELECT c.property_value FROM keysell.configuration c WHERE c.category = "standard" AND c.property_name = "global_user_access"), "$") AS globalUserAccess, IF(COUNT(ua.user_id) > 0, JSON_OBJECTAGG(COALESCE(ua.access, "null_access"), JSON_MERGE_PATCH("{}", IF(ua.active = 1, "true", "false"))), NULL) AS userAccess FROM keysell.users u LEFT JOIN keysell.users_access ua ON ua.user_id = u.id WHERE u.id = ? GROUP BY u.id';
     } else {
       query =
-        'SELECT JSON_OBJECT() AS globalUserAccess, IF(COUNT(ua.user_id) > 0, JSON_OBJECTAGG(COALESCE(ua.access, "null_access"), JSON_MERGE_PATCH("{}", IF(ua.active = 1, "true", "false"))), NULL) AS userAccess FROM users u LEFT JOIN users_access ua ON ua.user_id = u.id WHERE u.id = ? GROUP BY u.id';
+        'SELECT JSON_OBJECT() AS globalUserAccess, IF(COUNT(ua.user_id) > 0, JSON_OBJECTAGG(COALESCE(ua.access, "null_access"), JSON_MERGE_PATCH("{}", IF(ua.active = 1, "true", "false"))), NULL) AS keysell.userAccess FROM users u LEFT JOIN keysell.users_access ua ON ua.user_id = u.id WHERE u.id = ? GROUP BY u.id';
     }
     return this.databaseService.get<UserAccessConfiguration>(
       query,
@@ -329,7 +329,7 @@ export class UsersRepository {
 
   async updateUserAccess(userId: number, userAccess: UserAccess) {
     const insertUserAccess = `REPLACE
-    INTO users_access (user_id, access, active)`;
+    INTO keysell.users_access (user_id, access, active)`;
     await this.databaseService.batchInsert(
       insertUserAccess,
       Object.keys(userAccess).map((key: string) => [
@@ -340,7 +340,7 @@ export class UsersRepository {
     );
 
     return this.databaseService.get<UserAccess>(
-      'SELECT JSON_OBJECTAGG(access, IF(active = 1, true, false)) AS userAccess FROM users_access WHERE user_id = ?',
+      'SELECT JSON_OBJECTAGG(access, IF(active = 1, true, false)) AS userAccess FROM keysell.users_access WHERE user_id = ?',
       [userId],
       (row) => new UserAccess(row['userAccess']),
     );

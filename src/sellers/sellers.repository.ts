@@ -56,7 +56,7 @@ export class SellersRepository {
       await this.addressesRepository.create(address);
       addressId = address.id;
     }
-    const insertSellerQuery = `INSERT INTO sellers (uuid, first_name, last_name, email, phone, sex, preferred_language, address_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const insertSellerQuery = `INSERT INTO keysell.sellers (uuid, first_name, last_name, email, phone, sex, preferred_language, address_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertSellerQuery, [
         uuidv4(),
@@ -76,7 +76,7 @@ export class SellersRepository {
 
   async findAll(): Promise<Seller[]> {
     return this.databaseService.all<Seller>(
-      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM sellers s LEFT JOIN addresses a ON s.address_id = a.id ORDER BY created_at ASC',
+      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.sellers s LEFT JOIN keysell.addresses a ON s.address_id = a.id ORDER BY created_at ASC',
       undefined,
       this.rowMapper,
     );
@@ -84,7 +84,7 @@ export class SellersRepository {
 
   async findOne(id: number): Promise<Seller> {
     return this.databaseService.get<Seller>(
-      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM sellers s LEFT JOIN addresses a ON s.address_id = a.id WHERE s.id = ?',
+      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.sellers s LEFT JOIN keysell.addresses a ON s.address_id = a.id WHERE s.id = ?',
       [id],
       this.rowMapper,
     );
@@ -105,7 +105,7 @@ export class SellersRepository {
       addressId = 0;
     }
     const updateQuery = `
-      UPDATE sellers
+      UPDATE keysell.sellers
       SET first_name = ?,
           last_name = ?,
           email = ?,
@@ -128,7 +128,7 @@ export class SellersRepository {
         id,
       ])
       .then(() => {
-        const selectQuery = `SELECT * FROM sellers WHERE id =?`;
+        const selectQuery = `SELECT * FROM keysell.sellers WHERE id =?`;
         return this.databaseService.get<Seller>(
           selectQuery,
           [id],
@@ -140,11 +140,11 @@ export class SellersRepository {
   async remove(id: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return this.databaseService
-        .run('DELETE FROM sellers WHERE id = ?', [id])
+        .run('DELETE FROM keysell.sellers WHERE id = ?', [id])
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM sellers WHERE id = ?',
+              'SELECT COUNT(*) as count FROM keysell.sellers WHERE id = ?',
               [id],
             )
             .then((result: { count: number }) => resolve(result.count === 0))

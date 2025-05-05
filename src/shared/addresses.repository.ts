@@ -18,7 +18,7 @@ export class AddressesRepository {
   }
 
   async create(address: Address): Promise<Address> {
-    const insertAddressQuery = `INSERT INTO addresses (street, complement, zip_code, city, country_code)
+    const insertAddressQuery = `INSERT INTO keysell.addresses (street, complement, zip_code, city, country_code)
                                 VALUES (?, ?, ?, ?, ?)`;
     const addressId = await this.databaseService.run(insertAddressQuery, [
       address.street,
@@ -33,7 +33,7 @@ export class AddressesRepository {
 
   findOne(addressId: number) {
     return this.databaseService.get<Address>(
-      'SELECT * FROM addresses WHERE id = ?',
+      'SELECT * FROM keysell.addresses WHERE id = ?',
       [addressId],
       this.rowMapper,
     );
@@ -41,7 +41,7 @@ export class AddressesRepository {
 
   update(addressId: number, address: Address) {
     const updateQuery = `
-        UPDATE addresses
+        UPDATE keysell.addresses
         SET street       = ?,
             complement   = ?,
             zip_code     = ?,
@@ -65,11 +65,11 @@ export class AddressesRepository {
   remove(addressId: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return this.databaseService
-        .run('DELETE FROM addresses WHERE id = ?', [addressId])
+        .run('DELETE FROM keysell.addresses WHERE id = ?', [addressId])
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM addresses WHERE id = ?',
+              'SELECT COUNT(*) as count FROM keysell.addresses WHERE id = ?',
               [addressId],
             )
             .then((result: { count: number }) => resolve(result.count === 0))

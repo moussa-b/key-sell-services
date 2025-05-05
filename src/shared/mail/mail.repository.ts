@@ -7,7 +7,7 @@ export class MailRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async create(mailAudit: MailAudit): Promise<MailAudit> {
-    const insertQuery = `INSERT INTO emails (message_id, email_to, email_from, subject, content, sent_by_user_id, user_id, seller_id, buyer_id, sent_at)
+    const insertQuery = `INSERT INTO keysell.emails (message_id, email_to, email_from, subject, content, sent_by_user_id, user_id, seller_id, buyer_id, sent_at)
                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertQuery, [

@@ -31,7 +31,7 @@ export class RealEstatesRepository {
                                                      ELSE
                                                          JSON_ARRAY()
                                                      END
-                                          FROM real_estates_sellers res2
+                                          FROM keysell.real_estates_sellers res2
                                           WHERE res2.real_estate_id = re.id)
                                               AS owners,
                                          (SELECT CASE
@@ -46,7 +46,7 @@ export class RealEstatesRepository {
                                                      ELSE
                                                          JSON_ARRAY()
                                                      END
-                                          FROM real_estates_sellers res3
+                                          FROM keysell.real_estates_sellers res3
                                                    JOIN sellers s2 ON res3.seller_id = s2.id
                                           WHERE res3.real_estate_id = re.id)
                                               AS owners_detail,
@@ -57,7 +57,7 @@ export class RealEstatesRepository {
                                                      ELSE
                                                          JSON_ARRAY()
                                                      END
-                                          FROM real_estates_buyers res2
+                                          FROM keysell.real_estates_buyers res2
                                           WHERE res2.real_estate_id = re.id)
                                               AS buyers,
                                          (SELECT CASE
@@ -72,7 +72,7 @@ export class RealEstatesRepository {
                                                      ELSE
                                                          JSON_ARRAY()
                                                      END
-                                          FROM real_estates_buyers res3
+                                          FROM keysell.real_estates_buyers res3
                                                    JOIN buyers s2 ON res3.buyer_id = s2.id
                                           WHERE res3.real_estate_id = re.id)
                                               AS buyers_detail,
@@ -100,12 +100,12 @@ export class RealEstatesRepository {
                                                      ELSE
                                                          JSON_ARRAY()
                                                      END
-                                          FROM real_estates_media rem
+                                          FROM keysell.real_estates_media rem
                                                    JOIN medias m ON rem.media_id = m.id
                                           WHERE rem.real_estate_id = re.id)
                                               AS medias
-                                  FROM real_estates re
-                                           LEFT JOIN addresses a ON re.address_id = a.id`;
+                                  FROM keysell.real_estates re
+                                           LEFT JOIN keysell.addresses a ON re.address_id = a.id`;
 
   rowMapper(row: any, includeMediaPath = false): RealEstateDto {
     const realEstate = new RealEstateDto();
@@ -182,7 +182,7 @@ export class RealEstatesRepository {
       await this.addressesRepository.create(address);
       addressId = address.id;
     }
-    const insertQuery = `INSERT INTO real_estates (type, terraced, surface, total_surface, year_of_construction, room_count, shower_count, terrace_count,
+    const insertQuery = `INSERT INTO keysell.real_estates (type, terraced, surface, total_surface, year_of_construction, room_count, shower_count, terrace_count,
                                                    has_garden, garden_surface, is_secured, security_detail,
                                                    facade_count, location, price, final_selling_price, price_currency, orientation, assignment,
                                                    remark, address_id,
@@ -216,7 +216,7 @@ export class RealEstatesRepository {
       .then(async (realEstateId: number) => {
         if (createRealEstateDto.owners?.length > 0) {
           const insertOwnerQuery = `REPLACE
-          INTO real_estates_sellers (real_estate_id, seller_id)`;
+          INTO keysell.real_estates_sellers (real_estate_id, seller_id)`;
           await this.databaseService.batchInsert(
             insertOwnerQuery,
             createRealEstateDto.owners.map((owner: number) => [
@@ -266,7 +266,7 @@ export class RealEstatesRepository {
       addressId = 0;
     }
     const updateQuery = `
-      UPDATE real_estates
+      UPDATE keysell.real_estates
       SET type                 = ?,
           terraced             = ?,
           surface              = ?,
@@ -317,10 +317,10 @@ export class RealEstatesRepository {
       .then(async () => {
         if (updateRealEstateDto.owners?.length > 0) {
           await this.databaseService.run(
-            'DELETE FROM real_estates_sellers WHERE real_estate_id = ?',
+            'DELETE FROM keysell.real_estates_sellers WHERE real_estate_id = ?',
             [realEstateId],
           );
-          const insertOwnerQuery = `INSERT INTO real_estates_sellers (real_estate_id, seller_id)`;
+          const insertOwnerQuery = `INSERT INTO keysell.real_estates_sellers (real_estate_id, seller_id)`;
           await this.databaseService.batchInsert(
             insertOwnerQuery,
             updateRealEstateDto.owners.map((owner: number) => [
@@ -330,7 +330,7 @@ export class RealEstatesRepository {
           );
         }
         await this.databaseService.run(
-          'UPDATE real_estates SET final_selling_price = ? WHERE id = ? AND status <> "SOLD"',
+          'UPDATE keysell.real_estates SET final_selling_price = ? WHERE id = ? AND status <> "SOLD"',
           [updateRealEstateDto.price, realEstateId],
         );
         return this.findOne(realEstateId);
@@ -342,7 +342,7 @@ export class RealEstatesRepository {
     updateStatusDto: UpdateStatusDto,
     updatedBy: number,
   ) {
-    const updateQuery = `UPDATE real_estates
+    const updateQuery = `UPDATE keysell.real_estates
                          SET status        = ?,
                              status_remark = ?,
                              final_selling_price = COALESCE(?, final_selling_price),
@@ -362,14 +362,14 @@ export class RealEstatesRepository {
       ])
       .then(async () => {
         await this.databaseService.run(
-          'DELETE FROM real_estates_buyers WHERE real_estate_id = ?',
+          'DELETE FROM keysell.real_estates_buyers WHERE real_estate_id = ?',
           [realEstateId],
         );
         if (
           updateStatusDto.buyers?.length > 0 &&
           updateStatusDto.status === RealEstateStatus.SOLD
         ) {
-          const insertOwnerQuery = `REPLACE INTO real_estates_buyers (real_estate_id, buyer_id)`;
+          const insertOwnerQuery = `REPLACE INTO keysell.real_estates_buyers (real_estate_id, buyer_id)`;
           await this.databaseService.batchInsert(
             insertOwnerQuery,
             updateStatusDto.buyers.map((buyer: number) => [
@@ -385,11 +385,11 @@ export class RealEstatesRepository {
   remove(realEstateId: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return this.databaseService
-        .run('DELETE FROM real_estates WHERE id = ?', [realEstateId])
+        .run('DELETE FROM keysell.real_estates WHERE id = ?', [realEstateId])
         .then(() => {
           this.databaseService
             .get<{ count: number }>(
-              'SELECT COUNT(*) as count FROM real_estates WHERE id = ?',
+              'SELECT COUNT(*) as count FROM keysell.real_estates WHERE id = ?',
               [realEstateId],
             )
             .then((result: { count: number }) => resolve(result.count === 0))
@@ -416,7 +416,7 @@ export class RealEstatesRepository {
   }
 
   linkMediaToRealEstate(realEstateId: number, createdMedias: Media[]) {
-    const insertQuery = `INSERT INTO real_estates_media (real_estate_id, media_id)`;
+    const insertQuery = `INSERT INTO keysell.real_estates_media (real_estate_id, media_id)`;
     this.databaseService.batchInsert(
       insertQuery,
       createdMedias.map((media: Media) => [realEstateId, media.id]),

@@ -29,13 +29,13 @@ export class TasksRepository {
       JSON_ARRAYAGG(JSON_OBJECT('label', CONCAT(u.last_name, ' ', u.first_name), 'value', u.id)) AS users_details,
       tre.real_estate_id AS real_estate_id
     FROM
-      tasks t
+      keysell.tasks t
         LEFT JOIN
-      tasks_users tu ON t.id = tu.task_id
+      keysell.tasks_users tu ON t.id = tu.task_id
         LEFT JOIN
-      users u ON tu.user_id = u.id
+      keysell.users u ON tu.user_id = u.id
         LEFT JOIN
-      tasks_real_estates tre ON t.id = tre.task_id`;
+      keysell.tasks_real_estates tre ON t.id = tre.task_id`;
 
   private readonly groupBySelectQuery = `
     GROUP BY
@@ -77,7 +77,7 @@ export class TasksRepository {
   }
 
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const insertTaskQuery = `INSERT INTO tasks (uuid, type, status, title, description, date, duration, created_by)
+    const insertTaskQuery = `INSERT INTO keysell.tasks (uuid, type, status, title, description, date, duration, created_by)
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertTaskQuery, [
@@ -93,13 +93,13 @@ export class TasksRepository {
       .then(async (taskId: number) => {
         if (createTaskDto.realEstateId > 0) {
           await this.databaseService.run(
-            `INSERT INTO tasks_real_estates (task_id, real_estate_id) VALUES (?, ?)`,
+            `INSERT INTO keysell.tasks_real_estates (task_id, real_estate_id) VALUES (?, ?)`,
             [taskId, createTaskDto.realEstateId],
           );
         }
         if (createTaskDto.users?.length > 0) {
           await this.databaseService.batchInsert(
-            `INSERT INTO tasks_users (task_id, user_id)`,
+            `INSERT INTO keysell.tasks_users (task_id, user_id)`,
             createTaskDto.users.map((userId: number) => [taskId, userId]),
           );
         }
@@ -136,7 +136,7 @@ export class TasksRepository {
 
   async update(taskId: number, updateTaskDto: UpdateTaskDto): Promise<Task> {
     const updateQuery = `
-      UPDATE tasks
+      UPDATE keysell.tasks
       SET type        = ?,
           status      = ?,
           title       = ?,
@@ -167,13 +167,13 @@ export class TasksRepository {
         );
         if (updateTaskDto.realEstateId > 0) {
           await this.databaseService.run(
-            `INSERT INTO tasks_real_estates (task_id, real_estate_id) VALUES (?, ?)`,
+            `INSERT INTO keysell.tasks_real_estates (task_id, real_estate_id) VALUES (?, ?)`,
             [taskId, updateTaskDto.realEstateId],
           );
         }
         if (updateTaskDto.users?.length > 0) {
           await this.databaseService.batchInsert(
-            `INSERT INTO tasks_users (task_id, user_id)`,
+            `INSERT INTO keysell.tasks_users (task_id, user_id)`,
             updateTaskDto.users.map((userId: number) => [taskId, userId]),
           );
         }
@@ -185,14 +185,14 @@ export class TasksRepository {
     taskId: number,
     updateTaskStatusDto: { status: TaskStatus; updatedBy: number },
   ) {
-    const updateQuery = `UPDATE tasks SET status = ?, updated_by = ? WHERE id = ?`;
+    const updateQuery = `UPDATE keysell.tasks SET status = ?, updated_by = ? WHERE id = ?`;
     await this.databaseService.run(updateQuery, [
       updateTaskStatusDto.status || null,
       updateTaskStatusDto.updatedBy,
       taskId,
     ]);
     const result = await this.databaseService.get(
-      `SELECT status FROM tasks WHERE id = ?`,
+      `SELECT status FROM keysell.tasks WHERE id = ?`,
       [taskId],
     );
     return result?.status === updateTaskStatusDto.status;
