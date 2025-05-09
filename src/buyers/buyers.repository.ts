@@ -7,6 +7,7 @@ import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { DateUtils } from '../utils/date-utils';
 import { AddressesRepository } from '../shared/addresses.repository';
 import { Address } from '../shared/models/address.entity';
+import { Media } from '../medias/entities/media.entity';
 
 @Injectable()
 export class BuyersRepository {
@@ -14,6 +15,51 @@ export class BuyersRepository {
     private readonly databaseService: DatabaseService,
     private readonly addressesRepository: AddressesRepository,
   ) {}
+
+  private readonly selectQuery = `SELECT
+                                    b.*,
+                                    CASE
+                                      WHEN COUNT(m.id) > 0 THEN
+                                        JSON_ARRAYAGG(
+                                          JSON_OBJECT(
+                                            'id', m.id,
+                                            'uuid', m.uuid,
+                                            'absolute_path', m.absolute_path,
+                                            'file_name', m.file_name,
+                                            'media_type', m.media_type,
+                                            'mime_type', m.mime_type,
+                                            'file_size', m.file_size,
+                                            'created_by', m.created_by,
+                                            'created_at', m.created_at
+                                          )
+                                        )
+                                      ELSE
+                                        JSON_ARRAY()
+                                      END AS medias,
+                                    a.id AS addressId,
+                                    a.street,
+                                    a.complement,
+                                    a.zip_code,
+                                    a.city,
+                                    a.country_code
+                                  FROM
+                                    keysell.buyers b
+                                      LEFT JOIN
+                                    keysell.addresses a ON b.address_id = a.id
+                                      LEFT JOIN
+                                    keysell.buyers_media bm ON b.id = bm.buyer_id
+                                      LEFT JOIN
+                                    keysell.medias m ON bm.media_id = m.id`;
+
+  private readonly groupBySelectQuery = `GROUP BY
+    b.id, a.id, a.street, a.complement, a.zip_code, a.city, a.country_code`;
+
+  private buildSelectQuery(
+    whereClause?: string,
+    orderByClause?: string,
+  ): string {
+    return `${this.selectQuery} ${whereClause ? whereClause : ''} ${this.groupBySelectQuery} ${orderByClause ? orderByClause : ''}`;
+  }
 
   rowMapper(row: any): Buyer {
     const buyer = new Buyer();
@@ -47,6 +93,11 @@ export class BuyersRepository {
         countryCode: row['country_code'],
       });
     }
+    buyer.medias = row['medias'].map((mediaRow: any) => {
+      const media = new Media(mediaRow);
+      media.absolutePath = undefined;
+      return media;
+    });
     return buyer;
   }
 
@@ -81,7 +132,7 @@ export class BuyersRepository {
 
   async findAll(): Promise<Buyer[]> {
     return this.databaseService.all<Buyer>(
-      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.buyers b LEFT JOIN keysell.addresses a ON b.address_id = a.id ORDER BY created_at ASC',
+      this.buildSelectQuery(undefined, 'ORDER BY created_at ASC'),
       undefined,
       this.rowMapper,
     );
@@ -89,7 +140,7 @@ export class BuyersRepository {
 
   async findOne(id: number): Promise<Buyer> {
     return this.databaseService.get<Buyer>(
-      'SELECT b.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.buyers b LEFT JOIN keysell.addresses a ON b.address_id = a.id WHERE b.id = ?',
+      this.buildSelectQuery('WHERE b.id = ?'),
       [id],
       this.rowMapper,
     );
@@ -156,5 +207,13 @@ export class BuyersRepository {
         })
         .catch((err) => reject(err));
     });
+  }
+
+  linkMediaToBuyer(buyerId: number, createdMedias: Media[]) {
+    const insertQuery = `INSERT INTO keysell.buyers_media (buyer_id, media_id)`;
+    this.databaseService.batchInsert(
+      insertQuery,
+      createdMedias.map((media: Media) => [buyerId, media.id]),
+    );
   }
 }

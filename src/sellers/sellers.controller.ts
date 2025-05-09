@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,7 +8,9 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { SellersService } from './sellers.service';
 import { CreateSellerDto } from './dto/create-seller.dto';
@@ -20,6 +23,15 @@ import { ConnectedUser } from '../shared/models/current-user';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { Request } from 'express';
+import {
+  checkIdentityDocuments,
+  getDestination,
+  getFilename,
+} from '../utils/file-upload.utils';
+import { MediaType } from '../shared/models/media-type.enum';
 
 @Controller('sellers')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -28,12 +40,39 @@ export class SellersController {
 
   @Post()
   @Permissions('canEditSellers')
+  @UseInterceptors(
+    FilesInterceptor('documents[]', 2, {
+      storage: diskStorage({
+        destination: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, destination: string) => void,
+        ) =>
+          getDestination(
+            req,
+            file,
+            callback,
+            MediaType.IDENTITY_DOCUMENT,
+            'sellers',
+          ),
+        filename: getFilename,
+      }),
+    }),
+  )
   create(
-    @Body() createSellerDto: CreateSellerDto,
+    @UploadedFiles() documents: Express.Multer.File[] = [],
+    @Body('seller') rawCreateSellerDto: string,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Seller> {
+    let createSellerDto: CreateSellerDto;
+    try {
+      createSellerDto = JSON.parse(rawCreateSellerDto);
+    } catch (e) {
+      throw new BadRequestException('Invalid seller JSON', e);
+    }
+    checkIdentityDocuments(documents);
     createSellerDto.createdBy = user.id;
-    return this.sellersService.create(createSellerDto);
+    return this.sellersService.create(createSellerDto, documents);
   }
 
   @Get()
@@ -45,35 +84,55 @@ export class SellersController {
   @Get(':sellerId')
   @Permissions('canShowSellers')
   async findOne(@Param('sellerId') sellerId: string): Promise<Seller> {
-    const seller = await this.sellersService.findOne(+sellerId);
-    if (!seller) {
-      throw new NotFoundException(`Seller with ID ${sellerId} not found`);
-    }
-    return seller;
+    return await this.sellersService.checkAndFindSellerById(sellerId);
   }
 
-  @Patch(':sellerId')
+  @Patch(':id') // id here must not be renamed because of getDestination
   @Permissions('canEditSellers')
+  @UseInterceptors(
+    FilesInterceptor('documents[]', 2, {
+      storage: diskStorage({
+        destination: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, destination: string) => void,
+        ) =>
+          getDestination(
+            req,
+            file,
+            callback,
+            MediaType.IDENTITY_DOCUMENT,
+            'sellers',
+          ),
+        filename: getFilename,
+      }),
+    }),
+  )
   async update(
-    @Param('sellerId') sellerId: string,
-    @Body() updateSellerDto: UpdateSellerDto,
+    @Param('id') sellerId: string,
+    @UploadedFiles() documents: Express.Multer.File[] = [],
+    @Body('seller') rawUpdateSellerDto: string,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Seller> {
+    let updateSellerDto: UpdateSellerDto;
+    try {
+      updateSellerDto = JSON.parse(rawUpdateSellerDto);
+    } catch (e) {
+      throw new BadRequestException('Invalid buyer JSON', e);
+    }
+    checkIdentityDocuments(documents);
     updateSellerDto.updatedBy = user.id;
     const seller = await this.sellersService.findOne(+sellerId);
     if (!seller) {
       throw new NotFoundException(`Seller with ID ${sellerId} not found`);
     }
-    return this.sellersService.update(+sellerId, updateSellerDto);
+    return this.sellersService.update(+sellerId, updateSellerDto, documents);
   }
 
   @Delete(':sellerId')
   @Permissions('canEditSellers')
   async remove(@Param('sellerId') sellerId: string): Promise<ResponseStatus> {
-    const seller = await this.sellersService.findOne(+sellerId);
-    if (!seller) {
-      throw new NotFoundException(`Seller with ID ${sellerId} not found`);
-    }
+    const seller = await this.sellersService.checkAndFindSellerById(sellerId);
     return {
       status: await this.sellersService.remove(+sellerId, seller.address?.id),
     };
@@ -87,10 +146,7 @@ export class SellersController {
     @CurrentUser() user: ConnectedUser,
   ): Promise<ResponseStatus> {
     sendEmailDto.sentByUserId = user.id;
-    const seller = await this.sellersService.findOne(+sellerId);
-    if (!seller) {
-      throw new NotFoundException(`Seller with ID ${sellerId} not found`);
-    }
+    const seller = await this.sellersService.checkAndFindSellerById(sellerId);
     sendEmailDto.sellerId = +sellerId;
     return this.sellersService.sendEmail(seller.email, sendEmailDto);
   }

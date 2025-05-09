@@ -5,8 +5,10 @@ import { SellersRepository } from './sellers.repository';
 import { SellersHealthIndicator } from './sellers-health.indicator';
 import { ConfigService } from '@nestjs/config';
 import { HealthIndicatorService } from '@nestjs/terminus';
+import { MediasModule } from '../medias/medias.module';
 
 @Module({
+  imports: [MediasModule],
   controllers: [SellersController],
   providers: [
     ConfigService,

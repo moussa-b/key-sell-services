@@ -28,57 +28,16 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Request, Response } from 'express';
 import { DateUtils } from '../utils/date-utils';
-import { existsSync, mkdirSync } from 'fs-extra';
 import { Media } from '../medias/entities/media.entity';
 import { MediasService } from '../medias/medias.service';
-import { MediaType } from '../medias/entities/media-type.enum';
+import { MediaType } from '../shared/models/media-type.enum';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { Task, TaskStatus } from '../tasks/entities/task.entity';
 import { CreateTaskDto } from '../tasks/dto/create-task.dto';
 import { UpdateTaskDto } from '../tasks/dto/update-task.dto';
-
-const getFilename = (
-  req: Request,
-  file: Express.Multer.File,
-  callback: (error: Error | null, filename: string) => void,
-) => {
-  callback(
-    null,
-    `${DateUtils.formatToFileName(new Date())}_${file.originalname}`,
-  );
-};
-
-const getDestination = (
-  req: Request,
-  file: Express.Multer.File,
-  callback: (error: Error | null, destination: string) => void,
-  mediaType: MediaType,
-) => {
-  const id = req.params.id;
-  const uploadspath = process.env.UPLOADS_PATH || './uploads';
-  let subfolder: string;
-  switch (mediaType) {
-    case MediaType.IMAGE:
-      subfolder = 'pictures';
-      break;
-    case MediaType.VIDEO:
-      subfolder = 'videos';
-      break;
-    case MediaType.DOCUMENT:
-      subfolder = 'documents';
-      break;
-    default:
-      subfolder = 'documents';
-      break;
-  }
-  const uploadPath = `${uploadspath}/${subfolder}/${id}`;
-  if (!existsSync(uploadPath)) {
-    mkdirSync(uploadPath, { recursive: true });
-  }
-  callback(null, uploadPath);
-};
+import { getDestination, getFilename } from '../utils/file-upload.utils';
 
 @Controller('real-estates')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -162,7 +121,7 @@ export class RealEstatesController {
     };
   }
 
-  @Post(':id/pictures/upload')
+  @Post(':id/pictures/upload') // id here must not be renamed because of getDestination
   @UseInterceptors(
     FilesInterceptor('pictures[]', 10, {
       storage: diskStorage({
@@ -201,7 +160,7 @@ export class RealEstatesController {
     );
   }
 
-  @Post(':id/videos/upload')
+  @Post(':id/videos/upload') // id here must not be renamed because of getDestination
   @UseInterceptors(
     FilesInterceptor('videos[]', 10, {
       storage: diskStorage({
@@ -240,7 +199,7 @@ export class RealEstatesController {
     );
   }
 
-  @Post(':id/documents/upload')
+  @Post(':id/documents/upload') // id here must not be renamed because of getDestination
   @UseInterceptors(
     FilesInterceptor('documents[]', 10, {
       storage: diskStorage({
@@ -334,7 +293,7 @@ export class RealEstatesController {
   async findAllByRealEstateId(
     @Param('realEstateId') realEstateId: string,
   ): Promise<Task[]> {
-    await this.realEstateService.checkRealEstateId(realEstateId);
+    await this.realEstateService.checkAndFindRealEstateById(realEstateId);
     return this.realEstateService.findAllByRealEstateId(+realEstateId);
   }
 
@@ -359,7 +318,7 @@ export class RealEstatesController {
     @Body() createTaskDto: CreateTaskDto,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Task> {
-    await this.realEstateService.checkRealEstateId(realEstateId);
+    await this.realEstateService.checkAndFindRealEstateById(realEstateId);
     createTaskDto.createdBy = user.id;
     createTaskDto.realEstateId = +realEstateId;
     return this.realEstateService.createTask(createTaskDto);
@@ -373,7 +332,7 @@ export class RealEstatesController {
     @Body() updateTaskDto: UpdateTaskDto,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Task> {
-    await this.realEstateService.checkRealEstateId(realEstateId);
+    await this.realEstateService.checkAndFindRealEstateById(realEstateId);
     updateTaskDto.realEstateId = +realEstateId;
     updateTaskDto.updatedBy = user.id;
     return this.realEstateService.updateTask(+taskId, updateTaskDto);
@@ -387,7 +346,7 @@ export class RealEstatesController {
     @Body() updateTaskStatusDto: { status: TaskStatus; updatedBy: number },
     @CurrentUser() user: ConnectedUser,
   ): Promise<ResponseStatus> {
-    await this.realEstateService.checkRealEstateId(realEstateId);
+    await this.realEstateService.checkAndFindRealEstateById(realEstateId);
     updateTaskStatusDto.updatedBy = user.id;
     return {
       status: await this.realEstateService.updateTaskStatus(
@@ -402,7 +361,7 @@ export class RealEstatesController {
     @Param('taskId') taskId: string,
     @Param('realEstateId') realEstateId: string,
   ): Promise<ResponseStatus> {
-    await this.realEstateService.checkRealEstateId(realEstateId);
+    await this.realEstateService.checkAndFindRealEstateById(realEstateId);
     return {
       status: await this.realEstateService.removeTask(+taskId),
     };

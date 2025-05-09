@@ -3,4 +3,5 @@ export enum MediaType {
   IMAGE = 'IMAGE',
   VIDEO = 'VIDEO',
   DOCUMENT = 'DOCUMENT',
+  IDENTITY_DOCUMENT = 'IDENTITY_DOCUMENT',
 }

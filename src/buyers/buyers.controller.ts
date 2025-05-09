@@ -1,13 +1,15 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BuyersService } from './buyers.service';
 import { CreateBuyerDto } from './dto/create-buyer.dto';
@@ -20,6 +22,15 @@ import { ConnectedUser } from '../shared/models/current-user';
 import { SendEmailDto } from '../shared/dto/send-email.dto';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Permissions } from '../auth/decorators/permissions.decorator';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { Request } from 'express';
+import {
+  checkIdentityDocuments,
+  getDestination,
+  getFilename,
+} from '../utils/file-upload.utils';
+import { MediaType } from '../shared/models/media-type.enum';
 
 @Controller('buyers')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -28,12 +39,39 @@ export class BuyersController {
 
   @Post()
   @Permissions('canEditBuyers')
+  @UseInterceptors(
+    FilesInterceptor('documents[]', 2, {
+      storage: diskStorage({
+        destination: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, destination: string) => void,
+        ) =>
+          getDestination(
+            req,
+            file,
+            callback,
+            MediaType.IDENTITY_DOCUMENT,
+            'buyers',
+          ),
+        filename: getFilename,
+      }),
+    }),
+  )
   create(
-    @Body() createBuyerDto: CreateBuyerDto,
+    @UploadedFiles() documents: Express.Multer.File[] = [],
+    @Body('buyer') rawCreateBuyerDto: string,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Buyer> {
+    let createBuyerDto: CreateBuyerDto;
+    try {
+      createBuyerDto = JSON.parse(rawCreateBuyerDto);
+    } catch (e) {
+      throw new BadRequestException('Invalid buyer JSON', e);
+    }
+    checkIdentityDocuments(documents);
     createBuyerDto.createdBy = user.id;
-    return this.buyersService.create(createBuyerDto);
+    return this.buyersService.create(createBuyerDto, documents);
   }
 
   @Get()
@@ -45,35 +83,52 @@ export class BuyersController {
   @Get(':buyerId')
   @Permissions('canShowBuyers')
   async findOne(@Param('buyerId') buyerId: string): Promise<Buyer> {
-    const buyer = await this.buyersService.findOne(+buyerId);
-    if (!buyer) {
-      throw new NotFoundException(`Buyer with ID ${buyerId} not found`);
-    }
-    return buyer;
+    return this.buyersService.checkAndFindBuyerById(buyerId);
   }
 
-  @Patch(':buyerId')
+  @Patch(':id') // id here must not be renamed because of getDestination
   @Permissions('canEditBuyers')
+  @UseInterceptors(
+    FilesInterceptor('documents[]', 2, {
+      storage: diskStorage({
+        destination: (
+          req: Request,
+          file: Express.Multer.File,
+          callback: (error: Error | null, destination: string) => void,
+        ) =>
+          getDestination(
+            req,
+            file,
+            callback,
+            MediaType.IDENTITY_DOCUMENT,
+            'buyers',
+          ),
+        filename: getFilename,
+      }),
+    }),
+  )
   async update(
-    @Param('buyerId') buyerId: string,
-    @Body() updateBuyerDto: UpdateBuyerDto,
+    @Param('id') buyerId: string,
+    @UploadedFiles() documents: Express.Multer.File[] = [],
+    @Body('buyer') rawUpdateBuyerDto: string,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Buyer> {
-    updateBuyerDto.updatedBy = user.id;
-    const buyer = await this.buyersService.findOne(+buyerId);
-    if (!buyer) {
-      throw new NotFoundException(`Buyer with ID ${buyerId} not found`);
+    let updateBuyerDto: UpdateBuyerDto;
+    try {
+      updateBuyerDto = JSON.parse(rawUpdateBuyerDto);
+    } catch (e) {
+      throw new BadRequestException('Invalid buyer JSON', e);
     }
-    return this.buyersService.update(+buyerId, updateBuyerDto);
+    checkIdentityDocuments(documents);
+    updateBuyerDto.updatedBy = user.id;
+    await this.buyersService.checkAndFindBuyerById(buyerId);
+    return this.buyersService.update(+buyerId, updateBuyerDto, documents);
   }
 
   @Delete(':buyerId')
   @Permissions('canEditBuyers')
   async remove(@Param('buyerId') buyerId: string): Promise<ResponseStatus> {
-    const buyer = await this.buyersService.findOne(+buyerId);
-    if (!buyer) {
-      throw new NotFoundException(`Buyer with ID ${buyerId} not found`);
-    }
+    const buyer = await this.buyersService.checkAndFindBuyerById(buyerId);
     return {
       status: await this.buyersService.remove(+buyerId, buyer.address?.id),
     };
@@ -87,10 +142,7 @@ export class BuyersController {
     @CurrentUser() user: ConnectedUser,
   ): Promise<ResponseStatus> {
     sendEmailDto.sentByUserId = user.id;
-    const buyer = await this.buyersService.findOne(+buyerId);
-    if (!buyer) {
-      throw new NotFoundException(`Buyer with ID ${buyerId} not found`);
-    }
+    const buyer = await this.buyersService.checkAndFindBuyerById(buyerId);
     sendEmailDto.buyerId = +buyerId;
     return this.buyersService.sendEmail(buyer.email, sendEmailDto);
   }

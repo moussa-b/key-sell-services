@@ -1,5 +1,6 @@
 import { Sex } from './user-sex.enum';
 import { Address } from './address.entity';
+import { Media } from '../../medias/entities/media.entity';
 
 export class Client {
   id: number;
@@ -16,4 +17,5 @@ export class Client {
   updatedBy?: number;
   updatedAt?: Date;
   userId?: number;
+  medias?: Media[];
 }

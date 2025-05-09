@@ -8,9 +8,9 @@ import { RealEstatesRepository } from './real-estates.repository';
 import { LabelValue } from '../shared/dto/label-value.dto';
 import { AddressesService } from '../shared/addresses.service';
 import { I18nService } from 'nestjs-i18n';
-import { readdirSync, readFile, rmdirSync, unlink } from 'fs-extra';
+import { readFile, unlink } from 'fs-extra';
 import { Media } from '../medias/entities/media.entity';
-import { MediaType } from '../medias/entities/media-type.enum';
+import { MediaType } from '../shared/models/media-type.enum';
 import { MediasService } from '../medias/medias.service';
 import * as path from 'path';
 import { PdfService } from '../shared/pdf/pdf.service';
@@ -51,7 +51,7 @@ export class RealEstatesService {
     return this.realEstateRepository.findAll();
   }
 
-  async checkRealEstateId(realEstateId: string) {
+  async checkAndFindRealEstateById(realEstateId: string) {
     const realEstate = await this.findOne(+realEstateId, true);
     if (!realEstate) {
       throw new NotFoundException(
@@ -201,32 +201,8 @@ export class RealEstatesService {
     return createdMedias;
   }
 
-  async removePicture(media: Media) {
-    const result = await this.mediasService.remove(media.id);
-    unlink(media.absolutePath, (err) => {
-      if (err) {
-        this.logger.error(
-          `Failed to delete file: ${media.absolutePath} ${err.message}`,
-          this.className,
-        );
-      }
-    });
-    this.removeFolderIfEmpty(path.dirname(media.absolutePath));
-    return result;
-  }
-
-  removeFolderIfEmpty(folderPath: string) {
-    try {
-      const files = readdirSync(folderPath);
-      if (files.length === 0) {
-        rmdirSync(folderPath); // Remove the empty folder
-      }
-    } catch (err) {
-      this.logger.error(
-        `Failed to delete folder: ${folderPath} ${err.message}`,
-        this.className,
-      );
-    }
+  removePicture(media: Media): Promise<boolean> {
+    return this.mediasService.remove(media);
   }
 
   async export(

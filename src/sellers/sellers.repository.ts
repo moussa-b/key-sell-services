@@ -7,6 +7,7 @@ import { UpdateSellerDto } from './dto/update-seller.dto';
 import { DateUtils } from '../utils/date-utils';
 import { AddressesRepository } from '../shared/addresses.repository';
 import { Address } from '../shared/models/address.entity';
+import { Media } from '../medias/entities/media.entity';
 
 @Injectable()
 export class SellersRepository {
@@ -14,6 +15,48 @@ export class SellersRepository {
     private readonly databaseService: DatabaseService,
     private readonly addressesRepository: AddressesRepository,
   ) {}
+
+  private buildSelectQuery(
+    whereClause?: string,
+    orderByClause?: string,
+  ): string {
+    return `${this.selectQuery} ${whereClause ? whereClause : ''} ${this.groupBySelectQuery} ${orderByClause ? orderByClause : ''}`;
+  }
+
+  private readonly selectQuery = `SELECT s.*,
+                                         CASE
+                                           WHEN COUNT(m.id) > 0 THEN
+                                             JSON_ARRAYAGG(
+                                               JSON_OBJECT(
+                                                 'id', m.id,
+                                                 'uuid', m.uuid,
+                                                 'absolute_path', m.absolute_path,
+                                                 'file_name', m.file_name,
+                                                 'media_type', m.media_type,
+                                                 'mime_type', m.mime_type,
+                                                 'file_size', m.file_size,
+                                                 'created_by', m.created_by,
+                                                 'created_at', m.created_at
+                                               )
+                                             )
+                                           ELSE
+                                             JSON_ARRAY()
+                                           END AS medias,
+                                         a.id  AS addressId,
+                                         a.street,
+                                         a.complement,
+                                         a.zip_code,
+                                         a.city,
+                                         a.country_code
+                                  FROM keysell.sellers s
+                                         LEFT JOIN
+                                       keysell.addresses a ON s.address_id = a.id
+                                         LEFT JOIN
+                                       keysell.sellers_media sm ON s.id = sm.seller_id
+                                         LEFT JOIN
+                                       keysell.medias m ON sm.media_id = m.id`;
+  private readonly groupBySelectQuery = `GROUP BY
+    s.id, a.id, a.street, a.complement, a.zip_code, a.city, a.country_code`;
 
   rowMapper(row: any): Seller {
     const seller = new Seller();
@@ -46,6 +89,11 @@ export class SellersRepository {
         countryCode: row['country_code'],
       });
     }
+    seller.medias = row['medias'].map((mediaRow: any) => {
+      const media = new Media(mediaRow);
+      media.absolutePath = undefined;
+      return media;
+    });
     return seller;
   }
 
@@ -76,7 +124,7 @@ export class SellersRepository {
 
   async findAll(): Promise<Seller[]> {
     return this.databaseService.all<Seller>(
-      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.sellers s LEFT JOIN keysell.addresses a ON s.address_id = a.id ORDER BY created_at ASC',
+      this.buildSelectQuery(undefined, 'ORDER BY created_at ASC'),
       undefined,
       this.rowMapper,
     );
@@ -84,7 +132,7 @@ export class SellersRepository {
 
   async findOne(id: number): Promise<Seller> {
     return this.databaseService.get<Seller>(
-      'SELECT s.*, a.id AS addressId, a.street, a.complement, a.zip_code, a.city, a.country_code FROM keysell.sellers s LEFT JOIN keysell.addresses a ON s.address_id = a.id WHERE s.id = ?',
+      this.buildSelectQuery('WHERE s.id = ?'),
       [id],
       this.rowMapper,
     );
@@ -128,12 +176,7 @@ export class SellersRepository {
         id,
       ])
       .then(() => {
-        const selectQuery = `SELECT * FROM keysell.sellers WHERE id =?`;
-        return this.databaseService.get<Seller>(
-          selectQuery,
-          [id],
-          this.rowMapper,
-        );
+        return this.findOne(id);
       });
   }
 
@@ -152,5 +195,13 @@ export class SellersRepository {
         })
         .catch((err) => reject(err));
     });
+  }
+
+  linkMediaToSeller(sellerId: number, createdMedias: Media[]) {
+    const insertQuery = `INSERT INTO keysell.sellers_media (seller_id, media_id)`;
+    this.databaseService.batchInsert(
+      insertQuery,
+      createdMedias.map((media: Media) => [sellerId, media.id]),
+    );
   }
 }

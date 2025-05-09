@@ -1,4 +1,4 @@
-import { MediaType } from './media-type.enum';
+import { MediaType } from '../../shared/models/media-type.enum';
 
 export class Media {
   id: number;

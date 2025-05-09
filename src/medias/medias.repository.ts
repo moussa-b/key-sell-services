@@ -3,7 +3,7 @@ import { DatabaseService } from '../shared/db/database-service';
 import { Media } from './entities/media.entity';
 import { DateUtils } from '../utils/date-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { MediaType } from './entities/media-type.enum';
+import { MediaType } from '../shared/models/media-type.enum';
 
 @Injectable()
 export class MediasRepository {
