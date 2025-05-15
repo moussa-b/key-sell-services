@@ -8,6 +8,7 @@ export class Task {
   title: string;
   description: string;
   date: Date;
+  hour: string;
   duration: number;
   users?: number[];
   usersDetails?: LabelValue<string>[];

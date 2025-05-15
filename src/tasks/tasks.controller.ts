@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
@@ -42,8 +43,11 @@ export class TasksController {
 
   @Get()
   @Permissions('canShowTasks')
-  findAll(): Promise<Task[]> {
-    return this.tasksService.findAll();
+  findAll(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<Task[]> {
+    return this.tasksService.findAll(startDate, endDate);
   }
 
   @Get('real-estates/:realEstateId')

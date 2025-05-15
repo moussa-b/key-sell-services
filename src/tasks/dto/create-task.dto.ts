@@ -8,6 +8,7 @@ export class CreateTaskDto {
   title: string;
   description: string;
   date: Date;
+  hour: string;
   duration: number;
   users?: number[];
   tasks?: number[];

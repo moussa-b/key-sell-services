@@ -20,6 +20,7 @@ export class TasksRepository {
       t.title,
       t.description,
       t.date,
+      t.hour,
       t.duration,
       t.created_by,
       t.created_at,
@@ -39,7 +40,7 @@ export class TasksRepository {
 
   private readonly groupBySelectQuery = `
     GROUP BY
-      t.id, t.uuid, t.type, t.title, t.description, t.date, t.duration, t.created_by, t.created_at, t.updated_by, t.updated_at, tre.real_estate_id`;
+      t.id, t.uuid, t.type, t.title, t.description, t.date, t.hour, t.duration, t.created_by, t.created_at, t.updated_by, t.updated_at, tre.real_estate_id`;
 
   private buildSelectQuery(
     whereClause?: string,
@@ -60,6 +61,7 @@ export class TasksRepository {
       row['date'] instanceof Date
         ? row['date']
         : DateUtils.createDateFromDatabaseDate(row['date']);
+    task.hour = row['hour'];
     task.duration = row['duration'];
     task.users = row['users'];
     task.usersDetails = row['users_details'];
@@ -77,8 +79,8 @@ export class TasksRepository {
   }
 
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const insertTaskQuery = `INSERT INTO keysell.tasks (uuid, type, status, title, description, date, duration, created_by)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const insertTaskQuery = `INSERT INTO keysell.tasks (uuid, type, status, title, description, date, hour, duration, created_by)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertTaskQuery, [
         uuidv4(),
@@ -87,6 +89,7 @@ export class TasksRepository {
         createTaskDto.title,
         createTaskDto.description,
         createTaskDto.date,
+        createTaskDto.hour,
         createTaskDto.duration,
         createTaskDto.createdBy,
       ])
@@ -107,9 +110,22 @@ export class TasksRepository {
       });
   }
 
-  async findAll(): Promise<Task[]> {
+  async findAll(startDate: string, endDate: string): Promise<Task[]> {
+    let whereClause;
+    if (
+      startDate &&
+      DateUtils.isValidDateString(startDate) &&
+      endDate &&
+      DateUtils.isValidDateString(endDate)
+    ) {
+      whereClause = ` WHERE date >= '${startDate}' AND date <= '${endDate}' `;
+    } else if (startDate && DateUtils.isValidDateString(startDate)) {
+      whereClause = ` WHERE date >= '${startDate}' `;
+    } else if (endDate && DateUtils.isValidDateString(endDate)) {
+      whereClause = ` WHERE date <= '${endDate}' `;
+    }
     return this.databaseService.all<Task>(
-      this.buildSelectQuery(),
+      this.buildSelectQuery(whereClause),
       undefined,
       this.rowMapper,
     );
@@ -142,6 +158,7 @@ export class TasksRepository {
           title       = ?,
           description = ?,
           date        = ?,
+          hour        = ?,
           duration    = ?,
           updated_by  = ?
       WHERE id = ?`;
@@ -152,6 +169,7 @@ export class TasksRepository {
         updateTaskDto.title || null,
         updateTaskDto.description || null,
         updateTaskDto.date || null,
+        updateTaskDto.hour || null,
         updateTaskDto.duration || null,
         updateTaskDto.updatedBy,
         taskId,

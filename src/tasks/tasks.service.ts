@@ -13,8 +13,8 @@ export class TasksService {
     return this.tasksRepository.create(createTaskDto);
   }
 
-  async findAll(): Promise<Task[]> {
-    return this.tasksRepository.findAll();
+  async findAll(startDate: string, endDate: string): Promise<Task[]> {
+    return this.tasksRepository.findAll(startDate, endDate);
   }
 
   async findAllByRealEstateId(realEstateId: number): Promise<Task[]> {

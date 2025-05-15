@@ -3,6 +3,7 @@ import { UserRole } from './user-role.enum';
 export class UserAccess {
   canEditBuyers = false;
   canEditCalendarEvents = false;
+  canEditPlanning = false;
   canEditRealEstates = false;
   canEditSellers = false;
   canEditTasks = false;
@@ -11,6 +12,7 @@ export class UserAccess {
   canSendEmail = false;
   canShowBuyers = false;
   canShowCalendarEvents = false;
+  canShowPlanning = false;
   canShowRealEstates = false;
   canShowSellers = false;
   canShowTasks = false;
@@ -33,12 +35,14 @@ export class UserAccess {
         case UserRole.MANAGER:
           this.canEditBuyers = true;
           this.canEditCalendarEvents = true;
+          this.canEditPlanning = true;
           this.canEditRealEstates = true;
           this.canEditSellers = true;
           this.canEditTasks = true;
           this.canSendEmail = true;
           this.canShowBuyers = true;
           this.canShowCalendarEvents = true;
+          this.canShowPlanning = true;
           this.canShowRealEstates = true;
           this.canShowSellers = true;
           this.canShowTasks = true;
@@ -48,6 +52,7 @@ export class UserAccess {
         case UserRole.ADMIN:
           this.canEditBuyers = true;
           this.canEditCalendarEvents = true;
+          this.canEditPlanning = true;
           this.canEditRealEstates = true;
           this.canEditSellers = true;
           this.canEditTasks = true;
@@ -56,6 +61,7 @@ export class UserAccess {
           this.canSendEmail = true;
           this.canShowBuyers = true;
           this.canShowCalendarEvents = true;
+          this.canShowPlanning = true;
           this.canShowRealEstates = true;
           this.canShowSellers = true;
           this.canShowTasks = true;
@@ -68,6 +74,7 @@ export class UserAccess {
     // then give access with specific value
     this.setUserAccess(props, 'canEditBuyers');
     this.setUserAccess(props, 'canEditCalendarEvents');
+    this.setUserAccess(props, 'canEditPlanning');
     this.setUserAccess(props, 'canEditRealEstates');
     this.setUserAccess(props, 'canEditSellers');
     this.setUserAccess(props, 'canEditTasks');
@@ -76,6 +83,7 @@ export class UserAccess {
     this.setUserAccess(props, 'canSendEmail');
     this.setUserAccess(props, 'canShowBuyers');
     this.setUserAccess(props, 'canShowCalendarEvents');
+    this.setUserAccess(props, 'canShowPlanning');
     this.setUserAccess(props, 'canShowRealEstates');
     this.setUserAccess(props, 'canShowSellers');
     this.setUserAccess(props, 'canShowTasks');
