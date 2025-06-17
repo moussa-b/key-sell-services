@@ -139,7 +139,10 @@ export class RealEstatesController {
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
-          new FileTypeValidator({ fileType: 'image/(jpg|jpeg|png|gif)' }),
+          new FileTypeValidator({
+            fileType: 'image/(jpg|jpeg|png|gif)',
+            skipMagicNumbersValidation: true,
+          }),
           new MaxFileSizeValidator({
             maxSize: RealEstatesService.pictureMaxSize,
           }),
@@ -178,7 +181,10 @@ export class RealEstatesController {
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
-          new FileTypeValidator({ fileType: 'video/(mp4|avi|mov|mkv)' }),
+          new FileTypeValidator({
+            fileType: 'video/(mp4|avi|mov|mkv)',
+            skipMagicNumbersValidation: true,
+          }),
           new MaxFileSizeValidator({
             maxSize: RealEstatesService.videoMaxSize,
           }),
@@ -217,7 +223,10 @@ export class RealEstatesController {
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
-          new FileTypeValidator({ fileType: 'application/pdf' }),
+          new FileTypeValidator({
+            fileType: 'application/pdf',
+            skipMagicNumbersValidation: true,
+          }),
           new MaxFileSizeValidator({
             maxSize: RealEstatesService.documentMaxSize,
           }),

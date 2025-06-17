@@ -3,8 +3,11 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipeBuilder,
   Patch,
   Post,
   UploadedFiles,
@@ -26,9 +29,9 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Request } from 'express';
 import {
-  checkIdentityDocuments,
   getDestination,
   getFilename,
+  identityDocumentMaxSize,
 } from '../utils/file-upload.utils';
 import { MediaType } from '../shared/models/media-type.enum';
 
@@ -59,7 +62,24 @@ export class BuyersController {
     }),
   )
   create(
-    @UploadedFiles() documents: Express.Multer.File[] = [],
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypeValidator({
+            fileType: /^(image\/(jpe?g|png|gif)|application\/pdf)$/,
+            skipMagicNumbersValidation: true,
+          }),
+        )
+        .addValidator(
+          new MaxFileSizeValidator({
+            maxSize: identityDocumentMaxSize,
+          }),
+        )
+        .build({
+          fileIsRequired: false,
+        }),
+    )
+    documents: Express.Multer.File[] = [],
     @Body('buyer') rawCreateBuyerDto: string,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Buyer> {
@@ -69,7 +89,6 @@ export class BuyersController {
     } catch (e) {
       throw new BadRequestException('Invalid buyer JSON', e);
     }
-    checkIdentityDocuments(documents);
     createBuyerDto.createdBy = user.id;
     return this.buyersService.create(createBuyerDto, documents);
   }
@@ -109,7 +128,24 @@ export class BuyersController {
   )
   async update(
     @Param('id') buyerId: string,
-    @UploadedFiles() documents: Express.Multer.File[] = [],
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypeValidator({
+            fileType: /^(image\/(jpe?g|png|gif)|application\/pdf)$/,
+            skipMagicNumbersValidation: true,
+          }),
+        )
+        .addValidator(
+          new MaxFileSizeValidator({
+            maxSize: identityDocumentMaxSize,
+          }),
+        )
+        .build({
+          fileIsRequired: false,
+        }),
+    )
+    documents: Express.Multer.File[] = [],
     @Body('buyer') rawUpdateBuyerDto: string,
     @CurrentUser() user: ConnectedUser,
   ): Promise<Buyer> {
@@ -119,7 +155,6 @@ export class BuyersController {
     } catch (e) {
       throw new BadRequestException('Invalid buyer JSON', e);
     }
-    checkIdentityDocuments(documents);
     updateBuyerDto.updatedBy = user.id;
     await this.buyersService.checkAndFindBuyerById(buyerId);
     return this.buyersService.update(+buyerId, updateBuyerDto, documents);
