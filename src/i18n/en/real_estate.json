@@ -8,6 +8,7 @@
   "shower_count": "Number of showers",
   "facade_count": "Number of facades",
   "terrace_count": "Number of terraces",
+  "floor_number": "Number of floors",
   "terraced": "Terraced",
   "has_garden": "With garden",
   "is_secured": "Secure",

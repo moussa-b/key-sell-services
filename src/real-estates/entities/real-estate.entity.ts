@@ -12,6 +12,7 @@ export class RealEstate {
   totalSurface?: number;
   yearOfConstruction?: number;
   roomCount: number;
+  floorNumber?: number;
   showerCount?: number;
   terraceCount?: number;
   hasGarden?: boolean;

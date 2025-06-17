@@ -120,6 +120,7 @@ export class RealEstatesRepository {
     realEstate.roomCount = row['room_count'];
     realEstate.showerCount = row['shower_count'];
     realEstate.terraceCount = row['terrace_count'];
+    realEstate.floorNumber = row['floor_number'];
     realEstate.hasGarden = row['has_garden'] === 1;
     realEstate.gardenSurface = !isNaN(row['garden_surface'])
       ? Number(row['garden_surface'])
@@ -183,11 +184,11 @@ export class RealEstatesRepository {
       addressId = address.id;
     }
     const insertQuery = `INSERT INTO keysell.real_estates (type, terraced, surface, total_surface, year_of_construction, room_count, shower_count, terrace_count,
-                                                   has_garden, garden_surface, is_secured, security_detail,
+                                                   floor_number, has_garden, garden_surface, is_secured, security_detail,
                                                    facade_count, location, price, final_selling_price, price_currency, orientation, assignment,
                                                    remark, address_id,
                                                    created_by)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     return this.databaseService
       .run(insertQuery, [
         createRealEstateDto.type,
@@ -198,6 +199,7 @@ export class RealEstatesRepository {
         createRealEstateDto.roomCount,
         createRealEstateDto.showerCount,
         createRealEstateDto.terraceCount,
+        createRealEstateDto.floorNumber,
         createRealEstateDto.hasGarden,
         createRealEstateDto.gardenSurface,
         createRealEstateDto.isSecured,
@@ -275,6 +277,7 @@ export class RealEstatesRepository {
           room_count           = ?,
           shower_count         = ?,
           terrace_count        = ?,
+          floor_number         = ?,
           has_garden           = ?,
           garden_surface       = ?,
           is_secured           = ?,
@@ -299,6 +302,7 @@ export class RealEstatesRepository {
         updateRealEstateDto.roomCount || null,
         updateRealEstateDto.showerCount || null,
         updateRealEstateDto.terraceCount || null,
+        updateRealEstateDto.floorNumber || null,
         updateRealEstateDto.hasGarden,
         updateRealEstateDto.gardenSurface || null,
         updateRealEstateDto.isSecured,
