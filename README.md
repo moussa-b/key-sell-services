@@ -263,3 +263,9 @@ Clean volumes, images, networks
 ```bash
 docker image prune -a -f && docker volume prune -a -f && docker network prune -f
 ```
+
+## Check updates
+
+```shell
+npx npm-check-updates
+```
