@@ -1,5 +1,5 @@
-# Use the official Node.js LTS (Jod) image as the base image
-FROM node:lts-jod-slim
+# Use the official Node.js 22 image as the base image
+FROM node:22-slim
 
 # Install dependencies
 RUN apt-get update && apt-get install -y wkhtmltopdf && rm -rf /var/lib/apt/lists/*
