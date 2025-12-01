@@ -75,6 +75,13 @@ jobs:
             bdzapps/key-sell-services:latest
             bdzapps/key-sell-services:${{ env.NEW_VERSION }}
 
+      - name: Redeploy service on Coolify
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.COOLIFY_WEBHOOK }}
+          method: GET
+          bearerToken: ${{ secrets.COOLIFY_API_TOKEN }}
+
 #      - name: Restart Docker Compose on remote server
 #        uses: appleboy/ssh-action@v1.0.3
 #        with:
