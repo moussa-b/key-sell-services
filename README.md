@@ -50,6 +50,7 @@ ADMIN_USER_PASSWORD=admin123
 # DATABASE_URL=mysql://agencyservices:agencyservices@localhost:3306/keysell
 
 # Optional email configuration for sending emails
+EMAIL_ENABLED=true
 EMAIL_USER=admin@example.com
 EMAIL_PASSWORD=password123
 EMAIL_SMTP_HOST=example.com
@@ -90,6 +91,7 @@ JWT_SECRET=jwtsecret123
 ADMIN_USER_PASSWORD=admin123
 
 # Email configuration for sending emails
+EMAIL_ENABLED=true
 EMAIL_USER=admin@example.com
 EMAIL_PASSWORD=password123
 EMAIL_SMTP_HOST=example.com
@@ -112,6 +114,7 @@ All variables not marqued as **required** are optional.
 - `JWT_SECRET`: This is a **required** variable that holds a secret key used for generating JSON Web Tokens (JWT) for authentication purposes. Keep this value secure as it allows users to be authenticated within the application.
 - `ADMIN_USER_PASSWORD`: This is a **required** variable that defines the initial password for the admin user. It's recommended to change this password after the initial setup for security reasons.
 - `DATABASE_URL`: This variable stores the connection string for the database. It uses the mysql protocol and specifies the username (agencyservices), password (agencyservices), hostname (localhost), port (3306), and database name (keysell).
+- `EMAIL_ENABLED`: This variable enables or disables email sending. Set to `false` to disable email (e.g. in development); when `true` or omitted, email is enabled if other email configuration is present.
 - `EMAIL_USER`: This variable specifies the email address used to send emails from the application.
 - `EMAIL_PASSWORD`: This variable stores the password for the email address specified in `EMAIL_USER`.
 - `EMAIL_SMTP_HOST`: This variable defines the hostname of the SMTP server used for sending emails.

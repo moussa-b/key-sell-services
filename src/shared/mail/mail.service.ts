@@ -136,6 +136,9 @@ export class MailService {
   }
 
   async verifyTransporter(): Promise<boolean> {
+    if ('false' === this.config.get<string>('EMAIL_ENABLED')) {
+      return true;
+    }
     if (!this.transporter) {
       return false;
     }
